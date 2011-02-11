@@ -35,10 +35,14 @@ ActiveRecord::Schema.define(:version => 20110210223821) do
   end
 
   create_table "servers", :force => true do |t|
-    t.string   "name",       :null => false
-    t.string   "dns",        :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.string  "name",                     :null => false
+    t.string  "dns",                      :null => false
+    t.integer "hourly",    :default => 0, :null => false
+    t.integer "daily",     :default => 0, :null => false
+    t.integer "weekly",    :default => 0, :null => false
+    t.integer "monthly",   :default => 0, :null => false
+    t.integer "quarterly", :default => 0, :null => false
+    t.integer "yearly",    :default => 0, :null => false
   end
 
 end

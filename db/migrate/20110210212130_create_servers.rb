@@ -3,8 +3,12 @@ class CreateServers < ActiveRecord::Migration
     create_table :servers do |t|
       t.string :name, :null => false
       t.string :dns, :null => false
-
-      t.timestamps
+      t.integer :hourly, :null => false, :default => 0
+      t.integer :daily, :null => false, :default => 0
+      t.integer :weekly, :null => false, :default => 0
+      t.integer :monthly, :null => false, :default => 0
+      t.integer :quarterly, :null => false, :default => 0
+      t.integer :yearly, :null => false, :default => 0
     end
   end
 
