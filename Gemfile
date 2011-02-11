@@ -1,6 +1,14 @@
 source 'http://rubygems.org'
 
-gem 'rails', '3.0.3'
+gem 'rails', '3.0.3', :require => %w(action_controller active_record active_support)
+
+## stuff I put in here
+gem 'mysql', '~> 2.8.0'
+gem 'delayed_job', '2.0.6.exp4'
+
+#gem 'hoptoad_notifier', '~> 2.2.0'
+#gem 'notification_client', '0.2.6'
+
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'

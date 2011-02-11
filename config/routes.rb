@@ -1,4 +1,8 @@
 Backupadmin::Application.routes.draw do
+  resources :backups
+
+  resources :servers
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

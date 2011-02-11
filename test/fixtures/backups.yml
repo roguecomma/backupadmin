@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  backup_taken: 2011-02-10
+  bucket: MyString
+  volume_id: MyString
+
+two:
+  backup_taken: 2011-02-10
+  bucket: MyString
+  volume_id: MyString
