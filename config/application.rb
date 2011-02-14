@@ -38,5 +38,10 @@ module Backupadmin
 
     # Configure sensitive parameters which will be filtered from the log file.
     config.filter_parameters += [:password]
+
+    # Use RSpec
+    config.generators do |g|
+      g.test_framework :rspec
+    end
   end
 end

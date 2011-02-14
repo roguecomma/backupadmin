@@ -17,8 +17,22 @@ test:
   password:
   host: localhost
 
+qa:
+  adapter: mysql
+  encoding: utf8
+  reconnect: true
+  timeout: 60
+  database: backup_admin_qa
+  host: localhost
+  username: root
+  password:
+
 production:
-  adapter: sqlite3
-  database: db/production.sqlite3
-  pool: 5
-  timeout: 5000
+  adapter: mysql
+  encoding: utf8
+  reconnect: true
+  timeout: 60
+  database: backup_admin_production
+  host: localhost
+  username: root
+  password:

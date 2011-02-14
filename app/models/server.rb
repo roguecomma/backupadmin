@@ -13,10 +13,18 @@ class Server < ActiveRecord::Base
     return 'monthly' if monthly?
     #return 'quarterly' if quarterly?
     return 'yearly' if yearly?
-    return false
+    return nil
   end
 
   def register_cron_entries
+    remove_all_cron_entries
+    CronEdit::Crontab.Add "hourly-"+ name, "4 * * * * "+ create_cron_commandline(id, 'hourly') if hourly?
+    CronEdit::Crontab.Add "daily-"+ name, "7 0 * * 1,2,3,4,5,6,7 "+ create_cron_commandline(id, 'daily') if daily?
+    CronEdit::Crontab.Add "weekly-"+ name, "12 0 1,8,15,22 * * "+ create_cron_commandline(id, 'weekly') if weekly?
+    CronEdit::Crontab.Add "monthly-"+ name, "15 0 1 * * "+ create_cron_commandline(id, 'monthly') if monthly?
+  end
+
+  def remove_all_cron_entries
     CronEdit::Crontab.Remove "minute-"+ name
     CronEdit::Crontab.Remove "hourly-"+ name
     CronEdit::Crontab.Remove "daily-"+ name
@@ -24,10 +32,6 @@ class Server < ActiveRecord::Base
     CronEdit::Crontab.Remove "monthly-"+ name
     CronEdit::Crontab.Remove "quarterly-"+ name
     CronEdit::Crontab.Remove "yearly-"+ name
-    CronEdit::Crontab.Add "hourly-"+ name, "4 * * * * "+ create_cron_commandline(id, 'hourly') if hourly?
-    CronEdit::Crontab.Add "daily-"+ name, "7 0 * * 1,2,3,4,5,6,7 "+ create_cron_commandline(id, 'daily') if daily?
-    CronEdit::Crontab.Add "weekly-"+ name, "12 0 1,8,15,22 * * "+ create_cron_commandline(id, 'weekly') if weekly?
-    CronEdit::Crontab.Add "monthly-"+ name, "15 0 1 * * "+ create_cron_commandline(id, 'monthly') if monthly?
   end
 
   def create_cron_commandline(server_id, bucket)
