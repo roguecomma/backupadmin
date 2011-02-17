@@ -12,6 +12,10 @@ class Server < ActiveRecord::Base
     @@tags.select{|tag| respond_to?(tag +'?') && send(tag +'?')}.first
   end
 
+  def get_number_allowed(tag)
+    respond_to?(tag) ? send(tag) : 0
+  end
+
   def self.get_younger_tags(tag)
     return @@tags.slice(0, @@tags.index(tag))
   end

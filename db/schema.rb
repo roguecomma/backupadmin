@@ -18,10 +18,10 @@ ActiveRecord::Schema.define(:version => 20110215222722) do
   end
 
   create_table "backups", :force => true do |t|
-    t.integer "server_id",                       :null => false
-    t.date    "snapshot_started",                :null => false
-    t.date    "snapshot_finished"
-    t.string  "volume_id",         :limit => 50, :null => false
+    t.integer  "server_id",                       :null => false
+    t.datetime "snapshot_started",                :null => false
+    t.datetime "snapshot_finished"
+    t.string   "volume_id",         :limit => 50, :null => false
   end
 
   create_table "delayed_jobs", :force => true do |t|

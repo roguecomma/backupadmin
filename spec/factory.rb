@@ -63,8 +63,8 @@ module Factory
 
   build Backup do |attributes|
     attributes[:server] = create_server({:daily => 1, :weekly => 1, :yearly => 1}) unless attributes.include?(:server)
+    attributes[:snapshot_started] = Time.now unless attributes.include?(:snapshot_started)
     attributes.reverse_merge!(
-      :snapshot_started => Time.now,
       :volume_id => 'some-volume-id'
     )
     attributes

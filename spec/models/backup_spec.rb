@@ -18,17 +18,25 @@ describe Backup do
     }
 
     it 'should find oldest backup in younger tags' do
-      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'daily') == @backup_h2
-      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'weekly') == @backup_d
-      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'monthly') == @backup_w
-      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'quarterly') == @backup_m
-      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'yearly') == @backup_q
+      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'daily').should eql(@backup_h2)
+      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'weekly').should eql(@backup_d)
+      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'monthly').should eql(@backup_w)
+      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'quarterly').should eql(@backup_m)
+      Backup.find_oldest_backup_amongst_younger_tags(@backup.server, 'yearly').should eql(@backup_q)
+    end
+
+    it 'should find backups no longer needed ' do
+      Backup.find_backups_no_longer_needed(@backup.server.id, 'hourly', 4).should be_nil
+      Backup.find_backups_no_longer_needed(@backup.server.id, 'hourly', 1)[0].should eql(@backup_h2)
+      Backup.find_backups_no_longer_needed(@backup.server.id, 'hourly', 0).length.should eql(2)
+      Backup.find_backups_no_longer_needed(@backup.server.id, 'hourly', 2).should be_nil
+      Backup.find_backups_no_longer_needed(@backup.server.id, 'hourly', 3).should be_nil
     end
   end
 end
 
 def create_backup_with_tag(attributes, tag)
-  backup = create_backup({:server => @backup.server, :snapshot_started => Time.now - (60*60)})
+  backup = create_backup(attributes)
   backup.backup_tags << create_backup_tag({:backup => backup, :tag => tag})
   backup.save!
   Backup.find(backup.id)

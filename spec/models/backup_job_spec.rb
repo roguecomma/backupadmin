@@ -25,4 +25,7 @@ class BackupJob
   def create_backup_volume(server)
     'test vol name'
   end
+  def remove_backup_volume(volume_id)
+    puts 'remove fake vol '+ volume_id +' '+ (Time.now.to_s)
+  end
 end
