@@ -10,15 +10,18 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110210223821) do
+ActiveRecord::Schema.define(:version => 20110215222722) do
+
+  create_table "backup_tags", :force => true do |t|
+    t.integer "backup_id",               :null => false
+    t.string  "tag",       :limit => 10, :null => false
+  end
 
   create_table "backups", :force => true do |t|
-    t.integer  "server_id",                  :null => false
-    t.date     "backup_taken",               :null => false
-    t.string   "bucket",       :limit => 10, :null => false
-    t.string   "volume_id",    :limit => 50, :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.integer "server_id",                       :null => false
+    t.date    "snapshot_started",                :null => false
+    t.date    "snapshot_finished"
+    t.string  "volume_id",         :limit => 50, :null => false
   end
 
   create_table "delayed_jobs", :force => true do |t|

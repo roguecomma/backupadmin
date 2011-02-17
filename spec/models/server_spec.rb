@@ -2,31 +2,31 @@ require 'spec_helper'
 
 describe Server do
 
-  it 'get_highest_frequency_bucket should return nil if no buckets set' do
+  it 'get_highest_frequency_tag should return nil if no buckets set' do
     server = Server.new
-    server.get_highest_frequency_bucket.should == nil
+    server.get_highest_frequency_tag.should == nil
   end
 
-  it 'get_highest_frequency_bucket should return hourly if everything set' do
+  it 'get_highest_frequency_tag should return hourly if everything set' do
     server = Server.new
     server.hourly = 1
     server.daily = 1
     server.weekly = 1
     server.monthly = 1
     server.yearly = 1
-    server.get_highest_frequency_bucket.should == 'hourly'
+    server.get_highest_frequency_tag.should == 'hourly'
   end
 
-  it 'get_highest_frequency_bucket should return daily when hourly and min are not set' do
+  it 'get_highest_frequency_tag should return daily when hourly and min are not set' do
     server = Server.new
     server.daily = 1
-    server.get_highest_frequency_bucket.should == 'daily'
+    server.get_highest_frequency_tag.should == 'daily'
   end
 
-  it 'get_highest_frequency_bucket should return weekly when daily, hourly, and min are not set' do
+  it 'get_highest_frequency_tag should return weekly when daily, hourly, and min are not set' do
     server = Server.new
     server.weekly = 1
-    server.get_highest_frequency_bucket.should == 'weekly'
+    server.get_highest_frequency_tag.should == 'weekly'
   end
 
   it 'should create hourly and weekly cron jobs' do

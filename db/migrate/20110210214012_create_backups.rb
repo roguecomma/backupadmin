@@ -2,11 +2,9 @@ class CreateBackups < ActiveRecord::Migration
   def self.up
     create_table :backups do |t|
       t.integer :server_id, :null => false
-      t.date :backup_taken, :null => false
-      t.string :bucket, :null => false, :limit => 10
+      t.date :snapshot_started, :null => false
+      t.date :snapshot_finished
       t.string :volume_id, :null => false, :limit => 50
-
-      t.timestamps
     end
   end
 
