@@ -16,7 +16,7 @@ describe BackupJob do
     Backup.find(:first).backup_tags[0].tag.should == 'daily'
     @backup_job.tag = 'weekly'
     @backup_job.run_backup
-    Backup.find(:first).backup_tags.length == 2
+    Backup.find(:first).backup_tags.length.should eql(2)
   end
 end
 
