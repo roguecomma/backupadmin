@@ -34,10 +34,3 @@ describe Backup do
     end
   end
 end
-
-def create_backup_with_tag(attributes, tag)
-  backup = create_backup(attributes)
-  backup.backup_tags << create_backup_tag({:backup => backup, :tag => tag})
-  backup.save!
-  Backup.find(backup.id)
-end

@@ -35,9 +35,9 @@ class BackupJob < Struct.new(:server_id, :tag)
       backups.each {|backup|
         if (backup.backup_tags.length == 1)
           remove_backup_volume(backup.volume_id) if (backup.volume_id)
-          backup.delete!
+          backup.destroy
         else
-          backup.backup_tags.delete_if {|bt| bt.tag == tag}
+          backup.backup_tags.delete(backup.backup_tags.select{|bt| bt.tag == tag})
           backup.save!
         end
       }

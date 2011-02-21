@@ -64,9 +64,7 @@ module Factory
   build Backup do |attributes|
     attributes[:server] = create_server({:daily => 1, :weekly => 1, :yearly => 1}) unless attributes.include?(:server)
     attributes[:snapshot_started] = Time.now unless attributes.include?(:snapshot_started)
-    attributes.reverse_merge!(
-      :volume_id => 'some-volume-id'
-    )
+    attributes[:volume_id] = 'some-volume-id' unless attributes.include?(:volume_id)
     attributes
   end
 
@@ -75,4 +73,11 @@ module Factory
     attributes[:tag] = 'daily' unless attributes.include?(:tag)
     attributes
   end
+end
+
+def create_backup_with_tag(attributes, tag)
+  backup = create_backup(attributes) unless attributes.include?(:backup)
+  backup.backup_tags << create_backup_tag({:backup => backup, :tag => tag})
+  backup.save!
+  Backup.find(backup.id)
 end
