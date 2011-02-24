@@ -7,3 +7,5 @@ require 'ostruct'
 
 # Initialize the rails application
 Backupadmin::Application.initialize!
+
+::AppConfig.ec2 = YAML::load(IO.read("config/amazon_ec2.yml"))[Rails.env.to_s]

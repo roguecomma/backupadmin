@@ -10,19 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110215222722) do
-
-  create_table "backup_tags", :force => true do |t|
-    t.integer "backup_id",               :null => false
-    t.string  "tag",       :limit => 10, :null => false
-  end
-
-  create_table "backups", :force => true do |t|
-    t.integer  "server_id",                       :null => false
-    t.datetime "snapshot_started",                :null => false
-    t.datetime "snapshot_finished"
-    t.string   "volume_id",         :limit => 50, :null => false
-  end
+ActiveRecord::Schema.define(:version => 20110222200953) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -38,14 +26,24 @@ ActiveRecord::Schema.define(:version => 20110215222722) do
   end
 
   create_table "servers", :force => true do |t|
-    t.string  "name",                     :null => false
-    t.string  "dns",                      :null => false
-    t.integer "hourly",    :default => 0, :null => false
-    t.integer "daily",     :default => 0, :null => false
-    t.integer "weekly",    :default => 0, :null => false
-    t.integer "monthly",   :default => 0, :null => false
-    t.integer "quarterly", :default => 0, :null => false
-    t.integer "yearly",    :default => 0, :null => false
+    t.string  "name",                              :null => false
+    t.string  "elastic_ip",                        :null => false
+    t.string  "mount_point",                       :null => false
+    t.string  "state",       :default => "active", :null => false
+    t.integer "minute",      :default => 0,        :null => false
+    t.integer "hourly",      :default => 0,        :null => false
+    t.integer "daily",       :default => 0,        :null => false
+    t.integer "weekly",      :default => 0,        :null => false
+    t.integer "monthly",     :default => 0,        :null => false
+    t.integer "quarterly",   :default => 0,        :null => false
+    t.integer "yearly",      :default => 0,        :null => false
+  end
+
+  create_table "snapshot_events", :force => true do |t|
+    t.integer  "server_id",                :null => false
+    t.string   "event_type", :limit => 25, :null => false
+    t.datetime "created",                  :null => false
+    t.text     "log",                      :null => false
   end
 
 end

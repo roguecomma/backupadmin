@@ -1,0 +1,21 @@
+- name for project
+* setup
+ - 1 static cron job per time interval
+   - Code to run from that one cron job
+ - 1 static cron job every 20m to clear out old snapshots
+ - hoptoad integration
+ - rpm integration
+ - dj integration
+ - rspec integration
+
+* code
+ - default frequencies for new server
+ - Server object
+ - ec2 api calls wrapped
+ - remote code to take snapshot
+   - mysql calls - stop slave, all table lock, start slave
+   - mysql calls - gather replication stats for logging
+   - ssh to run xfs lock
+   - ssh to run xfs unlock
+ - dj job to take snapshot
+ - dj job to remove snapshots

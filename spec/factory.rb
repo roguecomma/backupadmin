@@ -56,28 +56,16 @@ module Factory
   build Server do |attributes|
     attributes.reverse_merge!(
       :name => 'test-server',
-      :dns => 'some.dns.com'
+      :elastic_ip => 'some.elastic.ip.com',
+      :mount_point => '/dev/sdh'
     )
-    attributes
-  end
-
-  build Backup do |attributes|
-    attributes[:server] = create_server({:daily => 1, :weekly => 1, :yearly => 1}) unless attributes.include?(:server)
-    attributes[:snapshot_started] = Time.now unless attributes.include?(:snapshot_started)
-    attributes[:volume_id] = 'some-volume-id' unless attributes.include?(:volume_id)
-    attributes
-  end
-
-  build BackupTag do |attributes|
-    attributes[:backup] = create_backup() unless attributes.include?(:backup)
-    attributes[:tag] = 'daily' unless attributes.include?(:tag)
     attributes
   end
 end
 
-def create_backup_with_tag(attributes, tag)
-  backup = create_backup(attributes) unless attributes.include?(:backup)
-  backup.backup_tags << create_backup_tag({:backup => backup, :tag => tag})
-  backup.save!
-  Backup.find(backup.id)
+def create_fake_snapshot(attributes)
+  attributes[:created_at] = Time.now unless attributes.include?(:created_at)
+  attributes[:tags] = {'frequency-bucket-daily' => nil, 'system-backup-id' => 'some.elastic.ip.com'} unless attributes.include?(:tags)
+  attributes[:id] = 'snap-fake-747473' unless attributes.include?(:id)
+  OpenStruct.new(attributes)
 end

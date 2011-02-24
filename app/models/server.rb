@@ -2,22 +2,26 @@ class Server < ActiveRecord::Base
   has_many :backups
 
   # Keep these in order from lowest to highest frequency
-  @@tags = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly']
+  @@frequency_buckets = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly']
 
-  def is_highest_frequency_tag?(tag)
-    tag == get_highest_frequency_tag
+  def is_active?
+    state? && state == 'active'
   end
 
-  def get_highest_frequency_tag
-    @@tags.select{|tag| respond_to?(tag +'?') && send(tag +'?')}.first
+  def is_highest_frequency_bucket?(tag)
+    tag == get_highest_frequency_bucket
   end
 
-  def get_number_allowed(tag)
-    respond_to?(tag) ? send(tag) : 0
+  def get_highest_frequency_bucket
+    @@frequency_buckets.select{|frequency_bucket| respond_to?(frequency_bucket +'?') && send(frequency_bucket +'?')}.first
   end
 
-  def self.get_younger_tags(tag)
-    return @@tags.slice(0, @@tags.index(tag))
+  def get_number_allowed(frequency_bucket)
+    respond_to?(frequency_bucket) ? send(frequency_bucket) : 0
+  end
+
+  def self.get_higher_frequency_buckets(frequency_bucket)
+    return @@frequency_buckets.slice(0, @@frequency_buckets.index(frequency_bucket))
   end
 
   def register_cron_entries
@@ -41,8 +45,8 @@ class Server < ActiveRecord::Base
     CronEdit::Crontab.Remove "yearly-"+ name
   end
 
-  def create_cron_commandline(server_id, tag)
-    "cd "+ (::Rails.root.to_s) +" && script/rails runner -e "+ (Rails.env.to_s) +" 'Delayed::Job.enqueue(BackupJob.new("+ (server_id.to_s) +", \""+ tag +"\"))'"
+  def create_cron_commandline(server_id, frequency_bucket)
+    "cd "+ (::Rails.root.to_s) +" && script/rails runner -e "+ (Rails.env.to_s) +" 'Delayed::Job.enqueue(BackupJob.new("+ (server_id.to_s) +", \""+ frequency_bucket +"\"))'"
   end
 
 end
