@@ -65,7 +65,7 @@ end
 
 def create_fake_snapshot(attributes)
   attributes[:created_at] = Time.now unless attributes.include?(:created_at)
-  attributes[:tags] = {'frequency-bucket-daily' => nil, 'system-backup-id' => 'some.elastic.ip.com'} unless attributes.include?(:tags)
+  attributes[:tags] = {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}daily" => nil, 'system-backup-id' => 'some.elastic.ip.com'} unless attributes.include?(:tags)
   attributes[:id] = 'snap-fake-747473' unless attributes.include?(:id)
   OpenStruct.new(attributes)
 end
