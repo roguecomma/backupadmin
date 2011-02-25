@@ -28,6 +28,7 @@ ActiveRecord::Schema.define(:version => 20110222200953) do
   create_table "servers", :force => true do |t|
     t.string  "name",                              :null => false
     t.string  "elastic_ip",                        :null => false
+    t.string  "ssh_user",    :default => "root",   :null => false
     t.string  "mount_point",                       :null => false
     t.string  "state",       :default => "active", :null => false
     t.integer "minute",      :default => 0,        :null => false

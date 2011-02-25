@@ -1,6 +1,6 @@
 class SnapshotEvent < ActiveRecord::Base
   before_save do
-    created = Time.now unless created?
+    self.created = Time.now unless self.created?
   end
 
   def self.log(server, event_type, log)

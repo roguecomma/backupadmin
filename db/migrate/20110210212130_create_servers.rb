@@ -3,6 +3,7 @@ class CreateServers < ActiveRecord::Migration
     create_table :servers do |t|
       t.string :name, :null => false
       t.string :elastic_ip, :null => false
+      t.string :ssh_user, :null => false, :default => 'root'
       t.string :mount_point, :null => false
       t.string :state, :null => false, :default => 'active'
       t.integer :minute, :null => false, :default => 0
