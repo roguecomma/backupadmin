@@ -3,22 +3,22 @@ require 'spec_helper'
 describe Snapshot do
   before(:each) {
     @server = create_server()
-    @snapshot_h1 = create_fake_snapshot({:created_at => Time.now - (60*60), :tags => {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}hourly" => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_h2 = create_fake_snapshot({:created_at => Time.now - (2*60*60), :tags => {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}hourly" => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_d = create_fake_snapshot({:created_at => Time.now - (24*60*60), :tags => {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}daily" => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_w = create_fake_snapshot({:created_at => Time.now - (7*24*60*60), :tags => {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}weekly" => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_m = create_fake_snapshot({:created_at => Time.now - (30*24*60*60), :tags => {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}monthly" => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_q = create_fake_snapshot({:created_at => Time.now - (90*24*60*60), :tags => {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}quarterly" => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_y = create_fake_snapshot({:created_at => Time.now - (150*24*60*60), :tags => {"#{Snapshot::FREQUENCY_BUCKET_PREFIX}yearly" => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    @snapshot_h1 = create_fake_snapshot({:created_at => Time.now - (60*60), :tags => {Snapshot.tag_name("hourly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    @snapshot_h2 = create_fake_snapshot({:created_at => Time.now - (2*60*60), :tags => {Snapshot.tag_name("hourly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    @snapshot_d = create_fake_snapshot({:created_at => Time.now - (24*60*60), :tags => {Snapshot.tag_name("daily") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    @snapshot_w = create_fake_snapshot({:created_at => Time.now - (7*24*60*60), :tags => {Snapshot.tag_name("weekly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    @snapshot_m = create_fake_snapshot({:created_at => Time.now - (30*24*60*60), :tags => {Snapshot.tag_name("monthly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    @snapshot_q = create_fake_snapshot({:created_at => Time.now - (90*24*60*60), :tags => {Snapshot.tag_name("quarterly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    @snapshot_y = create_fake_snapshot({:created_at => Time.now - (150*24*60*60), :tags => {Snapshot.tag_name("yearly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
   }
 
   it 'should get the correct frequency buckets from the tags' do
     Snapshot.get_frequency_buckets(@snapshot_h1).should eql(['hourly'])
-    @snapshot_h1.tags["#{Snapshot::FREQUENCY_BUCKET_PREFIX}weekly"] = nil
+    @snapshot_h1.tags[Snapshot.tag_name("weekly")] = nil
     Snapshot.get_frequency_buckets(@snapshot_h1).should include('hourly', 'weekly')
-    @snapshot_h1.tags["#{Snapshot::FREQUENCY_BUCKET_PREFIX}weekly"] = nil
-    @snapshot_h1.tags["#{Snapshot::FREQUENCY_BUCKET_PREFIX}daily"] = nil
-    @snapshot_h1.tags["#{Snapshot::FREQUENCY_BUCKET_PREFIX}monkey"] = nil
+    @snapshot_h1.tags[Snapshot.tag_name("weekly")] = nil
+    @snapshot_h1.tags[Snapshot.tag_name("daily")] = nil
+    @snapshot_h1.tags[Snapshot.tag_name("monkey")] = nil
     @snapshot_h1.tags['junk'] = nil
     @snapshot_h1.tags["otherstuff#{Snapshot::FREQUENCY_BUCKET_PREFIX}whipple"] = nil
     Snapshot.get_frequency_buckets(@snapshot_h1).should include('hourly', 'weekly', 'daily', 'monkey')

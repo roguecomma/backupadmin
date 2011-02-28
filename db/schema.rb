@@ -26,18 +26,19 @@ ActiveRecord::Schema.define(:version => 20110222200953) do
   end
 
   create_table "servers", :force => true do |t|
-    t.string  "name",                              :null => false
-    t.string  "elastic_ip",                        :null => false
-    t.string  "ssh_user",    :default => "root",   :null => false
-    t.string  "mount_point",                       :null => false
-    t.string  "state",       :default => "active", :null => false
-    t.integer "minute",      :default => 0,        :null => false
-    t.integer "hourly",      :default => 0,        :null => false
-    t.integer "daily",       :default => 0,        :null => false
-    t.integer "weekly",      :default => 0,        :null => false
-    t.integer "monthly",     :default => 0,        :null => false
-    t.integer "quarterly",   :default => 0,        :null => false
-    t.integer "yearly",      :default => 0,        :null => false
+    t.string  "name",                                                 :null => false
+    t.string  "system_backup_id", :limit => 64,                       :null => false
+    t.string  "ssh_user",                       :default => "root",   :null => false
+    t.string  "block_device",     :limit => 15,                       :null => false
+    t.string  "mount_point",      :limit => 15,                       :null => false
+    t.string  "state",                          :default => "active", :null => false
+    t.integer "minute",                         :default => 0,        :null => false
+    t.integer "hourly",                         :default => 0,        :null => false
+    t.integer "daily",                          :default => 0,        :null => false
+    t.integer "weekly",                         :default => 0,        :null => false
+    t.integer "monthly",                        :default => 0,        :null => false
+    t.integer "quarterly",                      :default => 0,        :null => false
+    t.integer "yearly",                         :default => 0,        :null => false
   end
 
   create_table "snapshot_events", :force => true do |t|

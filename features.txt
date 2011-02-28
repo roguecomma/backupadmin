@@ -1,6 +1,8 @@
 Things to fix/talk about
  - added env PATH=$PATH to sudo commands..need better path definition in sudoers or something
  - mysql won't connect, wrong creds. dunno why mtop works fine
+ - ssh_user -> create one with .ssh key & specific sudo privs (eg call pre-canned .sh files)
+ - elastic_ip not useful since it's attached to master not slave
 
 - name for project
 * setup
