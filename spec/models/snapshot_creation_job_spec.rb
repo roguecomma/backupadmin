@@ -4,16 +4,10 @@ describe SnapshotCreationJob do
   before(:each) {
     @server = create_server({:minute => 0, :hourly => 0, :daily => 1, :weekly => 1})
     @job = SnapshotCreationJob.new('daily')
-    Snapshot.stub!(:take_snapshot)
+    Snapshot.stub!(:do_snapshot_create)
     Snapshot.stub!(:add_to_frequency_bucket)
+    Snapshot.stub!(:run_ssh_command)
   }
-
-  it 'should not create a new snapshot since one is already in progress' do
-    Snapshot.stub!(:snapshot_in_progress?).and_return(true)
-    Snapshot.should_receive(:take_snapshot).at_most(0).times
-    SnapshotEvent.should_receive(:log)
-    @job.run(@server)
-  end
 
   it 'should create a new snapshot' do
     Snapshot.stub!(:snapshot_in_progress?).and_return(false)

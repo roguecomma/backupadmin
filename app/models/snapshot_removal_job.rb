@@ -9,7 +9,7 @@ class SnapshotRemovalJob
 
   def cycle_through_buckets(server)
     snapshots = Snapshot.find_snapshots_for_server(server)
-    server.frequency_buckets.each { |frequency_bucket|
+    Server::FREQUENCY_BUCKETS.each { |frequency_bucket|
       remove_unneeded_snapshots(server, snapshots, frequency_bucket, server.get_number_allowed(frequency_bucket))
     }
   end

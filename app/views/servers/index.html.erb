@@ -3,7 +3,11 @@
 <table>
   <tr>
     <th>Name</th>
-    <th>Dns</th>
+    <th>System Backup Id</th>
+    <th>Ssh User</th>
+    <th>Block Device</th>
+    <th>Mount Point</th>
+    <th>State</th>
     <th></th>
     <th></th>
     <th></th>
@@ -12,7 +16,11 @@
 <% @servers.each do |server| %>
   <tr>
     <td><%= server.name %></td>
-    <td><%= server.dns %></td>
+    <td><%= server.system_backup_id %></td>
+    <td><%= server.ssh_user %></td>
+    <td><%= server.block_device %></td>
+    <td><%= server.mount_point %></td>
+    <td><%= server.state %></td>
     <td><%= link_to 'Show', server %></td>
     <td><%= link_to 'Edit', edit_server_path(server) %></td>
     <td><%= link_to 'Destroy', server, :confirm => 'Are you sure?', :method => :delete %></td>

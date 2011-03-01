@@ -3,25 +3,32 @@ Things to fix/talk about
  - mysql won't connect, wrong creds. dunno why mtop works fine
  - ssh_user -> create one with .ssh key & specific sudo privs (eg call pre-canned .sh files)
  - elastic_ip not useful since it's attached to master not slave
+ - Crontab file: Might need PATH= as the first line in the file -- needed it locally
 
 - name for project
 * setup
  + 1 static cron job per time interval
    + Code to run from that one cron job
- - 1 static cron job every 20m to clear out old snapshots
+ + 1 static cron job every 20m to clear out old snapshots
  - hoptoad integration
  - rpm integration
  - dj integration
  - rspec integration
 
 * code
- - default frequencies for new server
+ - make snapshot creation calls idempotent...(what if dj stops for 3d?)
+   - don't take 15 highest freq snapshots in 2m span
+   - ignore/hoptoad-report many non-highest sequential jobs?
+ - fog collection.slice() issue
+ - finish up UI
+ + default frequencies for new server
  + Server object
- - ec2 api calls wrapped
- - remote code to take snapshot
-   - mysql calls - stop slave, all table lock, start slave
-   - mysql calls - gather replication stats for logging
-   - ssh to run xfs lock
-   - ssh to run xfs unlock
+ + ec2 api calls wrapped
+ + remote code to take snapshot
+   x mysql calls - all table lock, all table unlock
+   ? mysql calls - gather replication stats for logging
+   + ssh to mysql table locking
+   + ssh to run xfs lock
+   + ssh to run xfs unlock
  + dj job to take snapshot
  + dj job to remove snapshots

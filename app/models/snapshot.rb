@@ -47,11 +47,6 @@ class Snapshot
     SnapshotEvent.log(server, 'remove frequency tag', "Snapshot #{snapshot.id} removed from bucket -> #{frequency_bucket}.")
   end
 
-  # handle this..it exists elswhere currently
-  #def self.snapshot_in_progress?(server)
-  #  # filter for snapshots not in pending state
-  #end
-
   def self.get_frequency_buckets(snapshot)
     buckets = []
     if snapshot && snapshot.tags
