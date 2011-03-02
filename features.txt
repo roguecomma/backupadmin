@@ -17,10 +17,11 @@ Things to fix/talk about
 
 * code
  - make snapshot creation calls idempotent...(what if dj stops for 3d?)
-   - don't take 15 highest freq snapshots in 2m span
-   - ignore/hoptoad-report many non-highest sequential jobs?
+   + will skip job if job older than one interval (1hr for hourly job)
+   - ignore/hoptoad-report if job skipped
  - fog collection.slice() issue
  - finish up UI
+ - error condition checking for ssh calls ---
  + default frequencies for new server
  + Server object
  + ec2 api calls wrapped

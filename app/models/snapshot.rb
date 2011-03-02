@@ -2,6 +2,7 @@ require 'net/ssh'
 require 'mysql'
 
 class Snapshot
+  NAME_TAG = 'Name'
   BACKUP_ID_TAG = 'system-backup-id'
   FREQUENCY_BUCKET_PREFIX = 'frequency-bucket-'
 
@@ -38,7 +39,7 @@ class Snapshot
     ## BUG -- resource-id just can't be used in filter for some reason..skipping for now
     #tags = aws_connection.tags.all({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket)})
     
-    # These two commands work
+    # These two commands work but require an extra call to AWS
     #tags = aws_connection.tags.all({:key => self.tag_name(frequency_bucket)})
     #tags.each {|t| t.destroy if t.resource_id == snapshot.id } if tags
 
@@ -78,7 +79,8 @@ class Snapshot
   end
 
   def self.do_snapshot_create(server, volume_id, frequency_bucket)
-    snapshot = aws_connection.snapshots.create({'volumeId' => volume_id, :description => "snap of #{server.name}"})
+    snapshot = aws_connection.snapshots.create({'volumeId' => volume_id})
+    aws_connection.tags.create({:resource_id => snapshot.id, :key => NAME_TAG, :value => "snap of #{server.name}"})
     aws_connection.tags.create({:resource_id => snapshot.id, :key => BACKUP_ID_TAG, :value => server.system_backup_id})
     aws_connection.tags.create({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket), :value => nil})
     SnapshotEvent.log(server, 'create snapshot', "Snapshot (#{snapshot.id}) started for bucket -> #{frequency_bucket}.")
@@ -91,7 +93,7 @@ class Snapshot
       return
     end
 
-    ip = instance.ip_address
+    ip = instance.public_ip_address
     volume_id = get_volume_id_for_block_device(instance, server.block_device)
     if snapshot_in_progress?(volume_id)
       SnapshotEvent.log(server, 'create snapshot', "Failed Snapshot for bucket -> #{frequency_bucket}. Snapshot currently in progress for system-backup-id tag: #{server.system_backup_id}")
@@ -138,7 +140,7 @@ class Snapshot
   end
 
   def self.service_check(server)
-    # check that system_backup_id can find a server with an ip_address
+    # check that system_backup_id can find a server with an public_ip_address
     # verify that the block point is attached
     # verify that the volume exists (df -k or something)
   end

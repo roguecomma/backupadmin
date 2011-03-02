@@ -23,4 +23,16 @@ class Server < ActiveRecord::Base
   def self.get_higher_frequency_buckets(frequency_bucket)
     return FREQUENCY_BUCKETS.slice(0, FREQUENCY_BUCKETS.index(frequency_bucket))
   end
+
+  def self.get_interval_in_seconds(frequency_bucket)
+    return case frequency_bucket
+      when 'minute' then (20 * 60)
+      when 'hourly' then (60 * 60)
+      when 'daily' then (24 * 60 * 60)
+      when 'weekly' then (7 * 24 * 60 * 60)
+      when 'monthly' then (31 * 24 * 60 * 60)
+      when 'quarterly' then (90 * 24 * 60 * 60)
+      when 'yearly' then (365 * 24 * 60 * 60)
+    end
+  end
 end
