@@ -50,4 +50,50 @@ describe Snapshot do
     Snapshot.stub!(:fetch_snapshots).and_return { [] }
     Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(@server, 'yearly').should be_nil
   end
+
+  # unfortunately untestable at this time..need to mock Net::SSH
+  #it 'should raise exception if ssh returns data' do
+  #  Net::SSH.stub!(:start).and_return { ssh_output = 'some output' }
+  #  lambda { Snapshot.run_ssh_command(@server, nil, 'cmd', 'exc string') }.should raise_error
+  #end
+  #it 'should not raise exception if ssh returns no data' do
+  #  Net::SSH.stub!(:start)
+  #  lambda { Snapshot.run_ssh_command(@server, nil, 'cmd', 'exc string') }.should_not raise_error
+  #end
+
+  it 'should raise exception if delete tag raises exception' do
+    Snapshot.stub!(:delete_tag).and_return{raise 'hey'}
+    HoptoadNotifier.should_receive(:notify)
+    Snapshot.remove_from_frequency_bucket(@server, @snapshot_h1, 'daily')
+  end
+
+  it 'should not raise exception if delete tag does not raise exception' do
+    Snapshot.stub!(:delete_tag)
+    HoptoadNotifier.should_receive(:notify).at_most(0).times
+    Snapshot.remove_from_frequency_bucket(@server, @snapshot_h1, 'daily')
+  end
+
+  it 'should raise exception if add tag raises exception' do
+    Snapshot.stub!(:create_tag).and_return{raise 'hey'}
+    HoptoadNotifier.should_receive(:notify)
+    Snapshot.add_to_frequency_bucket(@server, @snapshot_h1, 'daily')
+  end
+
+  it 'should not raise exception if add tag does not raise exception' do
+    Snapshot.stub!(:create_tag)
+    HoptoadNotifier.should_receive(:notify).at_most(0).times
+    Snapshot.add_to_frequency_bucket(@server, @snapshot_h1, 'daily')
+  end
+
+  it 'should raise exception if remove snapshot raises exception' do
+    @snapshot_h1.stub!(:destroy).and_return{raise 'hey'}
+    HoptoadNotifier.should_receive(:notify)
+    Snapshot.remove_snapshot(@server, @snapshot_h1)
+  end
+
+  it 'should not raise exception if remove snapshot does not raise exception' do
+    @snapshot_h1.stub!(:destroy)
+    HoptoadNotifier.should_receive(:notify).at_most(0).times
+    Snapshot.remove_snapshot(@server, @snapshot_h1)
+  end
 end

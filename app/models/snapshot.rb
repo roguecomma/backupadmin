@@ -26,26 +26,36 @@ class Snapshot
   end
 
   def self.remove_snapshot(server, snapshot)
-    snapshot.destroy
-    SnapshotEvent.log(server, 'destroy snapshot', "Snapshot #{snapshot.id} destroyed.")
+    begin
+      snapshot.destroy
+      SnapshotEvent.log(server, 'destroy snapshot', "Snapshot #{snapshot.id} destroyed.")
+    rescue => e
+      custom_notify('AddTagToSnapshot', "Failed destroying Snapshot #{snapshot.id}.",
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id})
+      SnapshotEvent.log(server, 'destroy snapshot', "Failed destroying Snapshot #{snapshot.id}.")
+    end
   end
 
   def self.add_to_frequency_bucket(server, snapshot, frequency_bucket)
-    aws_connection.tags.create({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket), :value => nil})
-    SnapshotEvent.log(server, 'add frequency tag', "Snapshot #{snapshot.id} add to bucket -> #{frequency_bucket}.")
+    begin
+      self.create_tag(snapshot.id, self.tag_name(frequency_bucket))
+      SnapshotEvent.log(server, 'add frequency tag', "Snapshot #{snapshot.id} add to bucket -> #{frequency_bucket}.")
+    rescue => e
+      custom_notify('AddTagToSnapshot', "Failed adding Snapshot #{snapshot.id} to bucket -> #{frequency_bucket}.",
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id, 'bucket' => frequency_bucket})
+      SnapshotEvent.log(server, 'add frequency tag', "Failed adding Snapshot #{snapshot.id} to bucket -> #{frequency_bucket}.")
+    end
   end
 
   def self.remove_from_frequency_bucket(server, snapshot, frequency_bucket)
-    ## BUG -- resource-id just can't be used in filter for some reason..skipping for now
-    #tags = aws_connection.tags.all({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket)})
-    
-    # These two commands work but require an extra call to AWS
-    #tags = aws_connection.tags.all({:key => self.tag_name(frequency_bucket)})
-    #tags.each {|t| t.destroy if t.resource_id == snapshot.id } if tags
-
-    # This lower level call works, output is wacky though
-    aws_connection.delete_tags(snapshot.id, self.tag_name(frequency_bucket) => nil)
-    SnapshotEvent.log(server, 'remove frequency tag', "Snapshot #{snapshot.id} removed from bucket -> #{frequency_bucket}.")
+    begin
+      self.delete_tag(snapshot.id, self.tag_name(frequency_bucket))
+      SnapshotEvent.log(server, 'remove frequency tag', "Snapshot #{snapshot.id} removed from bucket -> #{frequency_bucket}.")
+    rescue => e
+      custom_notify('RemoveTagFromSnapshot', "Failed removing Snapshot #{snapshot.id} from bucket -> #{frequency_bucket}.",
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id, 'bucket' => frequency_bucket})
+      SnapshotEvent.log(server, 'remove frequency tag', "Failed removing Snapshot #{snapshot.id} from bucket -> #{frequency_bucket}.")
+    end
   end
 
   def self.get_frequency_buckets(snapshot)
@@ -64,20 +74,6 @@ class Snapshot
     s
   end
 
-  # This method farmed out for easy mocking
-  def self.fetch_snapshots(attributes)
-    aws_connection.snapshots.all(attributes)
-  end
-
-  # Builds a connection to AWS
-  def self.aws_connection
-    @connection ||= Fog::Compute.new(
-      :provider => 'AWS',
-      :aws_access_key_id => AppConfig.ec2['access_key_id'],
-      :aws_secret_access_key => AppConfig.ec2['secret_access_key']
-    )
-  end
-
   def self.do_snapshot_create(server, volume_id, frequency_bucket)
     snapshot = aws_connection.snapshots.create({'volumeId' => volume_id})
     aws_connection.tags.create({:resource_id => snapshot.id, :key => NAME_TAG, :value => "snap of #{server.name}"})
@@ -89,6 +85,8 @@ class Snapshot
   def self.take_snapshot(server, frequency_bucket)
     instance = self.get_instance_from_system_backup_id(server.system_backup_id)
     if (!instance)
+      custom_notify('NoInstanceToSnapshot', "Instance not found for: #{server.system_backup_id}",
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name})
       SnapshotEvent.log(server, 'create snapshot', "Failed Snapshot for bucket -> #{frequency_bucket}. instance not found for system-backup-id tag: #{server.system_backup_id}")
       return
     end
@@ -96,6 +94,8 @@ class Snapshot
     ip = instance.public_ip_address
     volume_id = get_volume_id_for_block_device(instance, server.block_device)
     if snapshot_in_progress?(volume_id)
+      custom_notify('SnapshotInProgress', "Snapshot in progress for: #{server.system_backup_id}",
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'volume_id' => volume_id})
       SnapshotEvent.log(server, 'create snapshot', "Failed Snapshot for bucket -> #{frequency_bucket}. Snapshot currently in progress for system-backup-id tag: #{server.system_backup_id}")
       return
     end
@@ -107,30 +107,44 @@ class Snapshot
       # mysql connection rejected..need proper credentials
       #mysql.connect(server.elastic_ip, server.ssh_user)
       #mysql.query("FLUSH TABLES WITH READ LOCK")
-      self.run_ssh_command(server, ip, "mysql -u root -e 'FLUSH TABLES WITH READ LOCK'")
+      self.run_ssh_command(server, ip, "mysql -u root -e 'FLUSH TABLES WITH READ LOCK'", 'unable to get mysql table lock')
       table_lock = true
-      self.run_ssh_command(server, ip, "xfs_freeze -f #{server.mount_point}")
+      self.run_ssh_command(server, ip, "xfs_freeze -f #{server.mount_point}", 'unable to freeze xfs filesystem')
       xfs_lock = true
 
       # here we kick off the actual snapshot
       self.do_snapshot_create(server, volume_id, frequency_bucket)
       
-      self.run_ssh_command(server, ip, "xfs_freeze -u #{server.mount_point}")
+      self.run_ssh_command(server, ip, "xfs_freeze -u #{server.mount_point}", 'unable to un-freeze xfs filesystem')
       xfs_lock = false
-      self.run_ssh_command(server, ip, "mysql -u root -e 'UNLOCK TABLES'")
+      self.run_ssh_command(server, ip, "mysql -u root -e 'UNLOCK TABLES'", 'unable to un-lock mysql tables')
       #mysql.query("UNLOCK TABLES")
       table_lock = false
+    rescue => exception
+      custom_notify('TakeSnapshotFailed', "Taking a Snapshot failed: #{server.system_backup_id}",
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'volume_id' => volume_id,
+                'failure_message' => exception.message})
+      SnapshotEvent.log(server, 'create snapshot', "Failed Snapshot for bucket -> #{frequency_bucket}. #{exception.message}")
     ensure
-      self.run_ssh_command(server, ip, "xfs_freeze -u #{server.mount_point}") if xfs_lock
-      self.run_ssh_command(server, ip, "mysql -u root -e 'UNLOCK TABLES'") if table_lock
+      ### is this how we throw away any exceptions?
+      begin
+        self.run_ssh_command(server, ip, "xfs_freeze -u #{server.mount_point}") if xfs_lock
+      rescue => e
+      end
+      begin
+        self.run_ssh_command(server, ip, "mysql -u root -e 'UNLOCK TABLES'") if table_lock
+      rescue => e
+      end
       #mysql.query("UNLOCK TABLES") if table_lock
       #mysql.close()
     end
   end
 
-  def self.run_ssh_command(server, ip, command)
+  def self.run_ssh_command(server, ip, command, exception_string=nil)
+    cmd = server.ssh_user == 'root' ? command : "sudo env PATH=$PATH #{command}"
     Net::SSH.start(ip, server.ssh_user) do |ssh|
-      puts ssh.exec!(server.ssh_user == 'root' ? command : "sudo env PATH=$PATH #{command}")
+      ssh_output = ssh.exec!(cmd)
+      raise "#{exception_string}: #{cmd} - #{ssh_output}" if ssh_output && exception_string
     end
   end
 
@@ -157,4 +171,35 @@ class Snapshot
     snapshots = self.fetch_snapshots({('volume-id') => volume_id})
     snapshots && snapshots.find{|s| s.state != "completed" } ? true : false
   end
+
+private
+  # This method farmed out for easy mocking
+  def self.fetch_snapshots(attributes)
+    aws_connection.snapshots.all(attributes)
+  end
+
+  def self.create_tag(id, tag)
+    aws_connection.tags.create({:resource_id => id, :key => tag, :value => nil})
+  end
+
+  def self.delete_tag
+    ## BUG -- resource-id just can't be used in filter for some reason..skipping for now
+    #tags = aws_connection.tags.all({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket)})
+    
+    # These two commands work but require an extra call to AWS
+    #tags = aws_connection.tags.all({:key => self.tag_name(frequency_bucket)})
+
+    #tags.each {|t| t.destroy if t.resource_id == snapshot.id } if tags
+    aws_connection.delete_tags(id, tag => nil)
+  end
+
+  # Builds a connection to AWS
+  def self.aws_connection
+    @connection ||= Fog::Compute.new(
+      :provider => 'AWS',
+      :aws_access_key_id => AppConfig.ec2['access_key_id'],
+      :aws_secret_access_key => AppConfig.ec2['secret_access_key']
+    )
+  end
+
 end

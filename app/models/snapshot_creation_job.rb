@@ -1,14 +1,14 @@
 class SnapshotCreationJob < Struct.new(:frequency_bucket)
 
-  def initialize(bucket)
+  def initialize(bucket, time=Time.now)
     @frequency_bucket = bucket
-    @queued_time = Time.now
+    @queued_time = time
   end
 
   def perform
     if job_too_old_to_run(@frequency_bucket, @queued_time)
-      puts "RUN: job is too old, skipping #{@queued_time} - #{Time.now}"
-      # do hoptoad notification thinger here
+      custom_notify('DJ Slow', "SnapshotCreationJob is too old, skipping bucket #{@frequency_bucket} ",
+              { 'queued_time' => @queued_time, 'now' => Time.now, 'bucket' => @frequency_bucket })
     else
       Server.find(:all).each { |server|
         run(server) if server.is_active?

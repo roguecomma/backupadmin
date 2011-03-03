@@ -4,24 +4,25 @@ Things to fix/talk about
  - ssh_user -> create one with .ssh key & specific sudo privs (eg call pre-canned .sh files)
  - elastic_ip not useful since it's attached to master not slave
  - Crontab file: Might need PATH= as the first line in the file -- needed it locally
+ - Requires fog from master branch, not current GA release
 
 - name for project
 * setup
  + 1 static cron job per time interval
    + Code to run from that one cron job
  + 1 static cron job every 20m to clear out old snapshots
- - hoptoad integration
+ + hoptoad integration
  - rpm integration
  - dj integration
  - rspec integration
 
 * code
- - make snapshot creation calls idempotent...(what if dj stops for 3d?)
+ + make snapshot creation calls idempotent...(what if dj stops for 3d?)
    + will skip job if job older than one interval (1hr for hourly job)
-   - ignore/hoptoad-report if job skipped
+   + ignore/hoptoad-report if job skipped
  - fog collection.slice() issue
  - finish up UI
- - error condition checking for ssh calls ---
+ - error condition checking for ssh calls
  + default frequencies for new server
  + Server object
  + ec2 api calls wrapped
