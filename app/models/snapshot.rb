@@ -185,7 +185,7 @@ private
     aws_connection.tags.create({:resource_id => id, :key => tag, :value => nil})
   end
 
-  def self.delete_tag
+  def self.delete_tag(id, tag)
     ## BUG -- resource-id just can't be used in filter for some reason..skipping for now
     #tags = aws_connection.tags.all({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket)})
     
