@@ -1,4 +1,6 @@
 class SnapshotEvent < ActiveRecord::Base
+  belongs_to :server
+
   before_save do
     self.created = Time.now unless self.created?
   end

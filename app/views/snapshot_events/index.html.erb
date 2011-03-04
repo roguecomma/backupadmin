@@ -1,0 +1,19 @@
+<h1>Listing Snapshot Events</h1>
+
+<table>
+  <tr>
+    <th width="10%">Server Name</th>
+    <th width="10%">Event Type</th>
+    <th width="10%">Time</th>
+    <th>Log</th>
+  </tr>
+
+<% @snapshot_events.each do |snapshot_event| %>
+  <tr>
+    <td><%= snapshot_event.server ? snapshot_event.server.name : snapshot_event.server_id %></td>
+    <td><%= snapshot_event.event_type %></td>
+    <td><%= snapshot_event.created %></td>
+    <td><%= snapshot_event.log %></td>
+  </tr>
+<% end %>
+</table>
