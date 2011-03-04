@@ -31,8 +31,9 @@ class Snapshot
       SnapshotEvent.log(server, 'destroy snapshot', "Snapshot #{snapshot.id} destroyed.")
     rescue => e
       custom_notify('AddTagToSnapshot', "Failed destroying Snapshot #{snapshot.id}.",
-              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id})
-      SnapshotEvent.log(server, 'destroy snapshot', "Failed destroying Snapshot #{snapshot.id}.")
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id},
+              e)
+      SnapshotEvent.log(server, 'destroy snapshot', "Failed destroying Snapshot #{snapshot.id}.", e)
     end
   end
 
@@ -42,8 +43,9 @@ class Snapshot
       SnapshotEvent.log(server, 'add frequency tag', "Snapshot #{snapshot.id} add to bucket -> #{frequency_bucket}.")
     rescue => e
       custom_notify('AddTagToSnapshot', "Failed adding Snapshot #{snapshot.id} to bucket -> #{frequency_bucket}.",
-              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id, 'bucket' => frequency_bucket})
-      SnapshotEvent.log(server, 'add frequency tag', "Failed adding Snapshot #{snapshot.id} to bucket -> #{frequency_bucket}.")
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id, 'bucket' => frequency_bucket},
+              e)
+      SnapshotEvent.log(server, 'add frequency tag', "Failed adding Snapshot #{snapshot.id} to bucket -> #{frequency_bucket}.", e)
     end
   end
 
@@ -53,8 +55,9 @@ class Snapshot
       SnapshotEvent.log(server, 'remove frequency tag', "Snapshot #{snapshot.id} removed from bucket -> #{frequency_bucket}.")
     rescue => e
       custom_notify('RemoveTagFromSnapshot', "Failed removing Snapshot #{snapshot.id} from bucket -> #{frequency_bucket}.",
-              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id, 'bucket' => frequency_bucket})
-      SnapshotEvent.log(server, 'remove frequency tag', "Failed removing Snapshot #{snapshot.id} from bucket -> #{frequency_bucket}.")
+              { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name, 'snapshot_id' => snapshot.id, 'bucket' => frequency_bucket},
+              e)
+      SnapshotEvent.log(server, 'remove frequency tag', "Failed removing Snapshot #{snapshot.id} from bucket -> #{frequency_bucket}.", e)
     end
   end
 

@@ -3,9 +3,9 @@ HoptoadNotifier.configure do |config|
 end
 
 module CustomNotifier
-  def custom_notify(error_class, error_message, parameters=nil)
+  def custom_notify(error_class, error_message, parameters=nil, exception=nil)
     HoptoadNotifier.notify(:error_class => error_class, :error_message => error_message,
-         :backtrace => caller, :parameters => parameters)
+         :backtrace => exception ? exception.backtrace : caller, :parameters => parameters)
   end
 end
 
