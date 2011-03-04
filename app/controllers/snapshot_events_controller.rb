@@ -1,8 +1,7 @@
 class SnapshotEventsController < ApplicationController
-  # GET /snapshot_events
-  # GET /snapshot_events.xml
   def index
-    @snapshot_events = SnapshotEvent.all
+    @snapshot_events = SnapshotEvent.join_server
+    @snapshot_events = @snapshot_events.find_all_by_server_id(params[:server_id]) if params[:server_id]
 
     respond_to do |format|
       format.html # index.html.erb
@@ -10,8 +9,6 @@ class SnapshotEventsController < ApplicationController
     end
   end
 
-  # GET /snapshot_events/1
-  # GET /snapshot_events/1.xml
   def show
     @snapshot_event = SnapshotEvent.find(params[:id])
 

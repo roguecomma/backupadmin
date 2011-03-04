@@ -5,6 +5,11 @@ class SnapshotEvent < ActiveRecord::Base
     self.created = Time.now unless self.created?
   end
 
+  named_scope :join_server, lambda { { :include => :server, :order => "#{SnapshotEvent.table_name}.created desc" } }
+
+  def display_list(params)
+  end
+
   def self.log(server, event_type, log, exception = nil)
     event = SnapshotEvent.new
     event.server_id = server.id

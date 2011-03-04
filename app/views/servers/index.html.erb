@@ -11,6 +11,8 @@
     <th></th>
     <th></th>
     <th></th>
+    <th></th>
+    <!--th></th-->
   </tr>
 
 <% @servers.each do |server| %>
@@ -23,7 +25,9 @@
     <td><%= server.state %></td>
     <td><%= link_to 'Show', server %></td>
     <td><%= link_to 'Edit', edit_server_path(server) %></td>
-    <td><%= link_to 'Destroy', server, :confirm => 'Are you sure?', :method => :delete %></td>
+    <td><%= link_to 'Snapshots', :controller => 'snapshots', :action => 'index', :server_id => server.id %></td>
+    <td><%= link_to 'Events', :controller => 'snapshot_events', :action => 'index', :server_id => server.id %></td>
+    <!--td><%= link_to 'Destroy', server, :confirm => 'Are you sure?', :method => :delete %></td-->
   </tr>
 <% end %>
 </table>
