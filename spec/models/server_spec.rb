@@ -4,11 +4,19 @@ describe Server do
 
   it 'get_highest_frequency_bucket should return nil if no buckets set' do
     server = Server.new
+    server.minute = 0
+    server.hourly = 0
+    server.daily = 0
+    server.weekly = 0
+    server.monthly = 0
+    server.quarterly = 0
+    server.yearly = 0
     server.get_highest_frequency_bucket.should == nil
   end
 
   it 'get_highest_frequency_bucket should return hourly if everything set' do
     server = Server.new
+    server.minute = 0
     server.hourly = 1
     server.daily = 1
     server.weekly = 1
@@ -19,6 +27,7 @@ describe Server do
 
   it 'should get_number_allowed' do
     server = Server.new
+    server.hourly = 0
     server.get_number_allowed('hourly').should be(0)
     server.hourly = 1
     server.daily = 2
@@ -36,12 +45,17 @@ describe Server do
 
   it 'get_highest_frequency_bucket should return daily when hourly and min are not set' do
     server = Server.new
+    server.minute = 0
+    server.hourly = 0
     server.daily = 1
     server.get_highest_frequency_bucket.should == 'daily'
   end
 
   it 'get_highest_frequency_bucket should return weekly when daily, hourly, and min are not set' do
     server = Server.new
+    server.minute = 0
+    server.hourly = 0
+    server.daily = 0
     server.weekly = 1
     server.get_highest_frequency_bucket.should == 'weekly'
   end
