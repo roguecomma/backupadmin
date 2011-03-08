@@ -12,9 +12,9 @@ Things to fix/talk about
    + Code to run from that one cron job
  + 1 static cron job every 20m to clear out old snapshots
  + hoptoad integration
- - rpm integration
+ + rpm integration
  + dj integration
- - rspec integration
+ + rspec integration
 
 * code
  + make snapshot creation calls idempotent...(what if dj stops for 3d?)

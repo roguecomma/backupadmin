@@ -11,6 +11,7 @@ gem 'cronedit', '0.3.0'
 gem 'fog', :git => 'git@github.com:geemus/fog.git'
 
 gem 'hoptoad_notifier', '~> 2.3'
+gem 'newrelic_rpm', '2.13.4'
 
 group :test, :development do
   gem 'rspec', '>= 2.5'
