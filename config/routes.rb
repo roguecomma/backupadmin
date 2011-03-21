@@ -1,5 +1,5 @@
 Backupadmin::Application.routes.draw do
-  root :to => 'servers#show'
+  root :to => 'servers#index'
   resources :servers
   resources :snapshots
   resources :snapshot_events
