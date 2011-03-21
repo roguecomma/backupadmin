@@ -1,0 +1,18 @@
+login: &login
+  access_key_id: your-key
+  secret_access_key: your-secret
+  
+development:
+  <<: *login
+  
+test:
+  <<: *login
+
+sandbox:
+  <<: *login
+
+qa:
+  <<: *login
+
+production:
+  <<: *login
