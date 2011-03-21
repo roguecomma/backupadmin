@@ -3,3 +3,4 @@ db/*.sqlite3
 log/*.log
 tmp/**/*
 config/amazon_ec2.yml
+public/stylesheets/*.css

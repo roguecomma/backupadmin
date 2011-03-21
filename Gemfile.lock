@@ -46,13 +46,16 @@ GEM
     builder (2.1.2)
     cronedit (0.3.0)
     daemons (1.1.0)
-    delayed_job (2.0.6.exp4)
+    delayed_job (2.1.4)
+      activesupport (~> 3.0)
       daemons
     diff-lcs (1.1.2)
     erubis (2.6.6)
       abstract (>= 1.0.0)
     excon (0.5.6)
+    flutie (1.1.5)
     formatador (0.0.16)
+    haml (3.0.22)
     hoptoad_notifier (2.4.6)
       activesupport
       builder
@@ -112,11 +115,13 @@ PLATFORMS
 
 DEPENDENCIES
   cronedit (= 0.3.0)
-  delayed_job (= 2.0.6.exp4)
+  delayed_job (~> 2.1)
+  flutie
   fog!
-  hoptoad_notifier (~> 2.3)
+  haml
+  hoptoad_notifier
   mysql (~> 2.8.0)
-  newrelic_rpm (= 2.13.4)
+  newrelic_rpm
   rails (= 3.0.3)
   rspec (>= 2.5)
   rspec-rails (>= 2.5)
