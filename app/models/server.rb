@@ -1,3 +1,5 @@
+require 'net/ssh'
+
 class Server < ActiveRecord::Base
   has_many :backups
 
@@ -46,8 +48,16 @@ class Server < ActiveRecord::Base
     end
   end
   
+  def instance
+    @instance ||= AWS.servers.all(backup_set_filter).first
+  end
+  
   def ip
     instance.ip_address
+  end
+  
+  def snapshots
+    @snapshots ||= AWS.snapshots.all(backup_set_filter)
   end
   
   private 
@@ -64,7 +74,4 @@ class Server < ActiveRecord::Base
       {"tag:#{BACKUP_ID_TAG}" => system_backup_id}
     end
     
-    def instance
-      @instance ||= AWS.servers.all(backup_set_filter).first
-    end    
 end

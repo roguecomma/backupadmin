@@ -1,9 +1,7 @@
-require 'net/ssh'
 require 'mysql'
 
 class Snapshot
   NAME_TAG = 'Name'
-  BACKUP_ID_TAG = 'system-backup-id'
   FREQUENCY_BUCKET_PREFIX = 'frequency-bucket-'
 
   def self.tag_name(frequency_bucket)
@@ -16,13 +14,9 @@ class Snapshot
 
   def self.find_oldest_snapshot_in_higher_frequency_buckets(server, frequency_bucket)
     snapshots = self.filter_snapshots_for_buckets_sort_by_age(
-                                 self.find_snapshots_for_server(server), 
+                                 server.snapshots, 
                                  Server.get_higher_frequency_buckets(frequency_bucket))
     snapshots && snapshots[0] ? snapshots[0] : nil
-  end
-
-  def self.find_snapshots_for_server(server)
-    self.fetch_snapshots({('tag:'+ BACKUP_ID_TAG) => server.system_backup_id})
   end
 
   def self.remove_snapshot(server, snapshot)
@@ -72,7 +66,7 @@ class Snapshot
   end
 
   def self.filter_snapshots_for_buckets_sort_by_age(snapshots, frequency_buckets)
-    s = snapshots.reject { |snapshot| (get_frequency_buckets(snapshot) & frequency_buckets).length == 0 } if snapshots
+    s = snapshots.reject { |snapshot| (get_frequency_buckets(snapshot) & frequency_buckets).length == 0 }
     s.sort! {|x,y| x.created_at <=> y.created_at} if s
     s
   end
@@ -86,7 +80,7 @@ class Snapshot
   end
 
   def self.take_snapshot(server, frequency_bucket)
-    instance = self.get_instance_from_system_backup_id(server.system_backup_id)
+    instance = server.instance
     if (!instance)
       custom_notify('NoInstanceToSnapshot', "Instance not found for: #{server.system_backup_id}",
               { 'system_backup_id' => server.system_backup_id, 'server_name' => server.name})
@@ -136,10 +130,6 @@ class Snapshot
     end
   end
 
-  def self.get_instance_from_system_backup_id(system_backup_id)
-    AWS.servers.all({('tag:'+ BACKUP_ID_TAG) => system_backup_id}).first
-  end
-
   def self.service_check(server)
     # check that system_backup_id can find a server with an public_ip_address
     # verify that the block point is attached
@@ -180,7 +170,7 @@ private
     AWS.delete_tags(id, tag => nil)
   end
   
-  def swallow_errors
+  def self.swallow_errors
     yield
   rescue RuntimeError => e
   end
