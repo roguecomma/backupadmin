@@ -46,7 +46,7 @@ GEM
     builder (2.1.2)
     cronedit (0.3.0)
     daemons (1.1.0)
-    delayed_job (2.1.4)
+    delayed_job (2.1.4.exp1)
       activesupport (~> 3.0)
       daemons
     diff-lcs (1.1.2)
@@ -119,7 +119,7 @@ PLATFORMS
 
 DEPENDENCIES
   cronedit (= 0.3.0)
-  delayed_job (~> 2.1)
+  delayed_job (= 2.1.4.exp1)
   flutie
   fog!
   formtastic

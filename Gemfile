@@ -4,7 +4,7 @@ gem 'rails', '3.0.3', :require => %w(action_controller active_record active_supp
 
 ## stuff I put in here
 gem 'mysql', '~> 2.8.0'
-gem 'delayed_job', '~>2.1' # DJ 2.1 is required for Rails 3
+gem 'delayed_job', '2.1.4.exp1'
 gem 'cronedit', '0.3.0'
 #gem 'fog', '~> 0.5'
 #gem 'fog', :path => '../fog'
