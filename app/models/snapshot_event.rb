@@ -8,8 +8,10 @@ class SnapshotEvent < ActiveRecord::Base
 
   def self.log(server, event_type, log, exception = nil)
     SnapshotEvent.create(:server => server, :event_type => event_type) do |event|
-      event.log = log
-      event.log = "#{event.log} - #{exception.message} - "+ (exception.backtrace.join("\n")).to_s if exception
+      if exception
+        log = "#{event.log} - #{exception.message}\n#{exception.backtrace.join("\n")}" 
+        event.log = log.slice(0, 65534) if log.size >= 65535
+      end
     end
   end
 end

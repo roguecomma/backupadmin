@@ -11,7 +11,7 @@ class Snapshot
   end
 
   def self.find(snapshot_id)
-    aws_connection.snapshots.get(snapshot_id)
+    AWS.snapshots.get(snapshot_id)
   end
 
   def self.find_oldest_snapshot_in_higher_frequency_buckets(server, frequency_bucket)
@@ -78,10 +78,10 @@ class Snapshot
   end
 
   def self.do_snapshot_create(server, volume_id, frequency_bucket)
-    snapshot = aws_connection.snapshots.create({'volumeId' => volume_id})
-    aws_connection.tags.create({:resource_id => snapshot.id, :key => NAME_TAG, :value => "snap of #{server.name}"})
-    aws_connection.tags.create({:resource_id => snapshot.id, :key => BACKUP_ID_TAG, :value => server.system_backup_id})
-    aws_connection.tags.create({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket), :value => nil})
+    snapshot = AWS.snapshots.create({'volumeId' => volume_id})
+    AWS.tags.create({:resource_id => snapshot.id, :key => NAME_TAG, :value => "snap of #{server.name}"})
+    AWS.tags.create({:resource_id => snapshot.id, :key => BACKUP_ID_TAG, :value => server.system_backup_id})
+    AWS.tags.create({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket), :value => nil})
     SnapshotEvent.log(server, 'create snapshot', "Snapshot (#{snapshot.id}) started for bucket -> #{frequency_bucket}.")
   end
 
@@ -110,17 +110,17 @@ class Snapshot
       # mysql connection rejected..need proper credentials
       #mysql.connect(server.elastic_ip, server.ssh_user)
       #mysql.query("FLUSH TABLES WITH READ LOCK")
-      self.run_ssh_command(server, ip, "mysql -u root -e 'FLUSH TABLES WITH READ LOCK'", 'unable to get mysql table lock')
+      server.ssh_exec "mysql -u root -e 'FLUSH TABLES WITH READ LOCK'", 'unable to get mysql table lock'
       table_lock = true
-      self.run_ssh_command(server, ip, "xfs_freeze -f #{server.mount_point}", 'unable to freeze xfs filesystem')
+      server.ssh_exec "xfs_freeze -f #{server.mount_point}", 'unable to freeze xfs filesystem'
       xfs_lock = true
 
       # here we kick off the actual snapshot
       self.do_snapshot_create(server, volume_id, frequency_bucket)
       
-      self.run_ssh_command(server, ip, "xfs_freeze -u #{server.mount_point}", 'unable to un-freeze xfs filesystem')
+      server.ssh_exec "xfs_freeze -u #{server.mount_point}", 'unable to un-freeze xfs filesystem'
       xfs_lock = false
-      self.run_ssh_command(server, ip, "mysql -u root -e 'UNLOCK TABLES'", 'unable to un-lock mysql tables')
+      server.ssh_exec "mysql -u root -e 'UNLOCK TABLES'", 'unable to un-lock mysql tables'
       #mysql.query("UNLOCK TABLES")
       table_lock = false
     rescue => exception
@@ -129,31 +129,15 @@ class Snapshot
                 'failure_message' => exception.message})
       SnapshotEvent.log(server, 'create snapshot', "Failed Snapshot for bucket -> #{frequency_bucket}. #{exception.message}")
     ensure
-      ### is this how we throw away any exceptions?
-      begin
-        self.run_ssh_command(server, ip, "xfs_freeze -u #{server.mount_point}") if xfs_lock
-      rescue => e
-      end
-      begin
-        self.run_ssh_command(server, ip, "mysql -u root -e 'UNLOCK TABLES'") if table_lock
-      rescue => e
-      end
+      swallow_errors { server.ssh_exec("xfs_freeze -u #{server.mount_point}") } if xfs_lock
+      swallow_errors { server.ssh_exec("mysql -u root -e 'UNLOCK TABLES'") } if table_lock
       #mysql.query("UNLOCK TABLES") if table_lock
       #mysql.close()
     end
   end
 
-  def self.run_ssh_command(server, ip, command, exception_string=nil)
-    cmd = server.ssh_user == 'root' ? command : "sudo env PATH=$PATH #{command}"
-    Net::SSH.start(ip, server.ssh_user) do |ssh|
-      ssh_output = ssh.exec!(cmd)
-      raise "#{exception_string}: #{cmd} - #{ssh_output}" if ssh_output && exception_string
-    end
-  end
-
   def self.get_instance_from_system_backup_id(system_backup_id)
-    instances = aws_connection.servers.all({('tag:'+ BACKUP_ID_TAG) => system_backup_id})
-    instances ? instances[0] : nil
+    AWS.servers.all({('tag:'+ BACKUP_ID_TAG) => system_backup_id}).first
   end
 
   def self.service_check(server)
@@ -178,31 +162,27 @@ class Snapshot
 private
   # This method farmed out for easy mocking
   def self.fetch_snapshots(attributes)
-    aws_connection.snapshots.all(attributes)
+    AWS.snapshots.all(attributes)
   end
 
   def self.create_tag(id, tag)
-    aws_connection.tags.create({:resource_id => id, :key => tag, :value => nil})
+    AWS.tags.create({:resource_id => id, :key => tag, :value => nil})
   end
 
   def self.delete_tag(id, tag)
     ## BUG -- resource-id just can't be used in filter for some reason..skipping for now
-    #tags = aws_connection.tags.all({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket)})
+    #tags = AWS.tags.all({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket)})
     
     # These two commands work but require an extra call to AWS
-    #tags = aws_connection.tags.all({:key => self.tag_name(frequency_bucket)})
+    #tags = AWS.tags.all({:key => self.tag_name(frequency_bucket)})
 
     #tags.each {|t| t.destroy if t.resource_id == snapshot.id } if tags
-    aws_connection.delete_tags(id, tag => nil)
+    AWS.delete_tags(id, tag => nil)
   end
-
-  # Builds a connection to AWS
-  def self.aws_connection
-    @connection ||= Fog::Compute.new(
-      :provider => 'AWS',
-      :aws_access_key_id => AppConfig.ec2['access_key_id'],
-      :aws_secret_access_key => AppConfig.ec2['secret_access_key']
-    )
+  
+  def swallow_errors
+    yield
+  rescue RuntimeError => e
   end
-
+  
 end
