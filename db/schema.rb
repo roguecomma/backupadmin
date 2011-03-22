@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110222200953) do
+ActiveRecord::Schema.define(:version => 20110322190531) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -44,7 +44,7 @@ ActiveRecord::Schema.define(:version => 20110222200953) do
   create_table "snapshot_events", :force => true do |t|
     t.integer  "server_id",                :null => false
     t.string   "event_type", :limit => 25, :null => false
-    t.datetime "created",                  :null => false
+    t.datetime "created_at",               :null => false
     t.text     "log",                      :null => false
   end
 
