@@ -11,6 +11,7 @@ gem 'cronedit', '0.3.0'
 gem 'fog', :git => 'git@github.com:geemus/fog.git'
 gem 'flutie' # Default styling
 gem 'haml' # SCSS support
+gem 'formtastic'
 
 gem 'hoptoad_notifier'
 gem 'newrelic_rpm'
