@@ -5,7 +5,7 @@ class Server < ActiveRecord::Base
   FREQUENCY_BUCKETS = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly']
 
   def is_active?
-    state? && state == 'active'
+    state == 'active'
   end
 
   def is_highest_frequency_bucket?(tag)
@@ -26,13 +26,13 @@ class Server < ActiveRecord::Base
 
   def self.get_interval_in_seconds(frequency_bucket)
     return case frequency_bucket
-      when 'minute' then (20 * 60)
-      when 'hourly' then (60 * 60)
-      when 'daily' then (24 * 60 * 60)
-      when 'weekly' then (7 * 24 * 60 * 60)
-      when 'monthly' then (31 * 24 * 60 * 60)
-      when 'quarterly' then (90 * 24 * 60 * 60)
-      when 'yearly' then (365 * 24 * 60 * 60)
+      when 'minute'     then 20.minutes
+      when 'hourly'     then 1.hour
+      when 'daily'      then 1.day
+      when 'weekly'     then 1.week
+      when 'monthly'    then 30.days
+      when 'quarterly'  then 90.days
+      when 'yearly'     then 1.year
     end
   end
 end

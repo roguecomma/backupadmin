@@ -39,18 +39,18 @@ describe SnapshotCreationJob do
 
   it 'should return calculate when too old to run' do
     @job.job_too_old_to_run('minute', Time.now).should be_false
-    @job.job_too_old_to_run('minute', Time.now - (60*60)).should be_true
-    @job.job_too_old_to_run('hourly', Time.now - (59*60)).should be_false
-    @job.job_too_old_to_run('hourly', Time.now - (61*60)).should be_true
-    @job.job_too_old_to_run('daily', Time.now - (23*60*60)).should be_false
-    @job.job_too_old_to_run('daily', Time.now - (25*60*60)).should be_true
-    @job.job_too_old_to_run('weekly', Time.now - (6*24*60*60)).should be_false
-    @job.job_too_old_to_run('weekly', Time.now - (8*24*60*60)).should be_true
-    @job.job_too_old_to_run('monthly', Time.now - (30*24*60*60)).should be_false
-    @job.job_too_old_to_run('monthly', Time.now - (32*24*60*60)).should be_true
-    @job.job_too_old_to_run('quarterly', Time.now - (89*24*60*60)).should be_false
-    @job.job_too_old_to_run('quarterly', Time.now - (91*24*60*60)).should be_true
-    @job.job_too_old_to_run('yearly', Time.now - (364*24*60*60)).should be_false
-    @job.job_too_old_to_run('yearly', Time.now - (366*24*60*60)).should be_true
+    @job.job_too_old_to_run('minute', Time.now - 1.hour).should be_true
+    @job.job_too_old_to_run('hourly', Time.now - 59.minutes).should be_false
+    @job.job_too_old_to_run('hourly', Time.now - 61.minutes).should be_true
+    @job.job_too_old_to_run('daily', Time.now - 23.hours).should be_false
+    @job.job_too_old_to_run('daily', Time.now - 25.hours).should be_true
+    @job.job_too_old_to_run('weekly', Time.now - 6.days).should be_false
+    @job.job_too_old_to_run('weekly', Time.now - 8.days).should be_true
+    @job.job_too_old_to_run('monthly', Time.now - 29.days).should be_false
+    @job.job_too_old_to_run('monthly', Time.now - 31.days).should be_true
+    @job.job_too_old_to_run('quarterly', Time.now - 89.days).should be_false
+    @job.job_too_old_to_run('quarterly', Time.now - 91.days).should be_true
+    @job.job_too_old_to_run('yearly', Time.now - 364.days).should be_false
+    @job.job_too_old_to_run('yearly', Time.now - 366.days).should be_true
   end
 end
