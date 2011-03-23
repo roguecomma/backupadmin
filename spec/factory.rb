@@ -62,11 +62,26 @@ module Factory
     )
     attributes
   end
+  
+  class Blank < OpenStruct
+    
+    private 
+    
+      def self._blank_slate(*args)
+        args.each do |method|
+          define_method(method) do 
+            method_missing(method)
+          end
+        end
+      end
+    
+    _blank_slate :id, :id=
+  end
 end
 
 def create_fake_snapshot(attributes)
   attributes[:created_at] = Time.now unless attributes.include?(:created_at)
   attributes[:tags] = {Snapshot.tag_name('daily') => nil, 'system-backup-id' => 'some.elastic.ip.com'} unless attributes.include?(:tags)
   attributes[:id] = 'snap-fake-747473' unless attributes.include?(:id)
-  OpenStruct.new(attributes)
+  Factory::Blank.new(attributes)
 end
