@@ -11,8 +11,8 @@ class SnapshotRemovalJob
 
   def remove_unneeded_snapshots(server, frequency_bucket, number_allowed)
     snapshots = server.snapshots_for_frequency_buckets(frequency_bucket)
-    prune_index = snapshots.length - number_allowed - 1
-    unless prune_index < 0
+    prune_index = snapshots.length - number_allowed
+    unless prune_index <= 0
       prune_snapshots = snapshots.slice(0, prune_index)
       prune_snapshots.each do |snapshot|
         if (snapshot.frequency_buckets.length == 1)

@@ -85,6 +85,12 @@ class Server < ActiveRecord::Base
     # verify that the volume exists (df -k or something)
   end
   
+  def reload
+    @instance = nil
+    @snapshots = nil
+    self
+  end
+  
   private 
     
     def sudo_command(command)
