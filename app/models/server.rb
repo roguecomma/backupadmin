@@ -15,10 +15,10 @@ class Server < ActiveRecord::Base
   end
 
   def is_highest_frequency_bucket?(tag)
-    tag == get_highest_frequency_bucket
+    tag == highest_frequency_bucket
   end
 
-  def get_highest_frequency_bucket
+  def highest_frequency_bucket
     FREQUENCY_BUCKETS.select{|frequency_bucket| respond_to?(frequency_bucket +'?') && send(frequency_bucket +'?')}.first
   end
 

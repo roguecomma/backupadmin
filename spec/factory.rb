@@ -85,3 +85,13 @@ def create_fake_snapshot(attributes)
   attributes[:id] = 'snap-fake-747473' unless attributes.include?(:id)
   Factory::Blank.new(attributes)
 end
+
+def create_snapshot(attributes = {})
+  server = attributes[:server]
+  volume = attributes[:volume]
+  raise ":server and :volume are required attributes" unless server && volume
+  
+  Snapshot.new(server, AWS.snapshots.create(:volume_id => volume.id).reload).tap do |snap|
+    AWS.create_tags(snap.id, {'system-backup-id' => server.system_backup_id}.merge(attributes[:tags]))
+  end
+end

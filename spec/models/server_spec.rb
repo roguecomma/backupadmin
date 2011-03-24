@@ -2,27 +2,46 @@ require 'spec_helper'
 
 describe Server do
 
-  it 'get_highest_frequency_bucket should return nil if no buckets set' do
-    server = Server.new
-    server.minute = 0
-    server.hourly = 0
-    server.daily = 0
-    server.weekly = 0
-    server.monthly = 0
-    server.quarterly = 0
-    server.yearly = 0
-    server.get_highest_frequency_bucket.should == nil
-  end
+  describe '.highest_frequency_bucket' do
+    it 'should return nil if no buckets set' do
+      server = Server.new
+      server.minute = 0
+      server.hourly = 0
+      server.daily = 0
+      server.weekly = 0
+      server.monthly = 0
+      server.quarterly = 0
+      server.yearly = 0
+      server.highest_frequency_bucket.should == nil
+    end
 
-  it 'get_highest_frequency_bucket should return hourly if everything set' do
-    server = Server.new
-    server.minute = 0
-    server.hourly = 1
-    server.daily = 1
-    server.weekly = 1
-    server.monthly = 1
-    server.yearly = 1
-    server.get_highest_frequency_bucket.should == 'hourly'
+    it 'should return hourly if everything set' do
+      server = Server.new
+      server.minute = 0
+      server.hourly = 1
+      server.daily = 1
+      server.weekly = 1
+      server.monthly = 1
+      server.yearly = 1
+      server.highest_frequency_bucket.should == 'hourly'
+    end
+    
+    it 'should return daily when hourly and min are not set' do
+      server = Server.new
+      server.minute = 0
+      server.hourly = 0
+      server.daily = 1
+      server.highest_frequency_bucket.should == 'daily'
+    end
+
+    it 'should return weekly when daily, hourly, and min are not set' do
+      server = Server.new
+      server.minute = 0
+      server.hourly = 0
+      server.daily = 0
+      server.weekly = 1
+      server.highest_frequency_bucket.should == 'weekly'
+    end
   end
 
   it 'should get_number_allowed' do
@@ -41,23 +60,6 @@ describe Server do
     server.get_number_allowed('weekly').should be(3)
     server.get_number_allowed('monthly').should be(4)
     server.get_number_allowed('yearly').should be(5)
-  end
-
-  it 'get_highest_frequency_bucket should return daily when hourly and min are not set' do
-    server = Server.new
-    server.minute = 0
-    server.hourly = 0
-    server.daily = 1
-    server.get_highest_frequency_bucket.should == 'daily'
-  end
-
-  it 'get_highest_frequency_bucket should return weekly when daily, hourly, and min are not set' do
-    server = Server.new
-    server.minute = 0
-    server.hourly = 0
-    server.daily = 0
-    server.weekly = 1
-    server.get_highest_frequency_bucket.should == 'weekly'
   end
   
   describe '#snapshots' do
@@ -103,15 +105,12 @@ describe Server do
       @server = create_server
       @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G').reload
       
-      @hourly = Snapshot.new(@server, AWS.snapshots.create(:volume_id => @volume.id))
-      AWS.create_tags(@hourly.id, 
-        'system-backup-id' => @server.system_backup_id,
-        'frequency-bucket-hourly' => nil)
-        
-      @daily = Snapshot.new(@server, AWS.snapshots.create(:volume_id => @volume.id).reload)
-      AWS.create_tags(@daily.id, 
-        'system-backup-id' => @server.system_backup_id,
-        'frequency-bucket-daily' => nil)
+      @hourly = create_snapshot(:server => @server, :volume => @volume, :tags => {
+        'frequency-bucket-hourly' => nil
+      })
+      @daily = create_snapshot(:server => @server, :volume => @volume, :tags => {
+        'frequency-bucket-daily' => nil
+      })
     end
     
     it 'should include snapshots for single matching bucket' do
@@ -123,12 +122,23 @@ describe Server do
     end
     
     it 'should not include snapshots for unmatched buckets' do
-      weekly = AWS.snapshots.create(:volume_id => @volume.id)
-      AWS.create_tags(weekly.id, 
-        'system-backup-id' => @server.system_backup_id,
-        'frequency-bucket-weekly' => nil)
+      weekly = create_snapshot(:server => @server, :volume => @volume, :tags => {
+        'frequency-bucket-weekly' => nil
+      })
       
       @server.snapshots_for_frequency_buckets('daily', 'hourly').map(&:id).sort.should == [@daily, @hourly].map(&:id).sort
+    end
+  end
+  
+  describe '#oldest_more_frequent_snapshot' do
+    it 'should return nil if not other snapshots' do
+      @server.oldest_more_frequent_snapshot('yearly').should == nil
+    end
+    
+    it 'should return nil for the most frequent bucket' do
+      create_snapshot(:server => @server, :volume => @volume, :tags => {
+        "frequency-bucket-#{@server.highest_frequency_bucket}" => nil
+      })
     end
   end
   

@@ -1,0 +1,4 @@
+* we use higher_frequency and more_frequent interchangeably
+* remove all fake_snapshot references
+* convert factories to FactoryGirl
+* extract Volume as a model?  Server 1->* Volume ->* Snapshot

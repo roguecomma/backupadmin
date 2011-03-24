@@ -35,8 +35,7 @@ describe SnapshotCreationJob do
 
   it 'should do nothing since not most frequent and no snapshots' do
     @job = SnapshotCreationJob.new('weekly')
-    Snapshot.stub!(:find_oldest_snapshot_in_higher_frequency_buckets).and_return(nil)
-    Snapshot.should_receive(:add_to_frequency_bucket).at_most(0).times
+    Snapshot.should_not_receive(:take_snapshot)
     @job.run(@server)
   end
 
