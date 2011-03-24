@@ -10,9 +10,7 @@ class SnapshotCreationJob < Struct.new(:frequency_bucket)
       custom_notify('DJ Slow', "SnapshotCreationJob is too old, skipping bucket #{@frequency_bucket} ",
               { 'queued_time' => @queued_time, 'now' => Time.now, 'bucket' => @frequency_bucket })
     else
-      Server.find(:all).each { |server|
-        run(server) if server.is_active?
-      }
+      Server.active.each { |server| run(server) }
     end
   end
 
@@ -20,9 +18,8 @@ class SnapshotCreationJob < Struct.new(:frequency_bucket)
     if server.is_highest_frequency_bucket?(@frequency_bucket)
       Snapshot.take_snapshot(server, @frequency_bucket)
     else
-      snapshot = Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(server, @frequency_bucket)
-      if (snapshot)
-        Snapshot.add_to_frequency_bucket(server, snapshot, @frequency_bucket)
+      if (snapshot = server.oldest_more_frequent_snapshot(@frequency_bucket))
+        snapshot.add_frequency_bucket(@frequency_bucket)
       end
     end
   end

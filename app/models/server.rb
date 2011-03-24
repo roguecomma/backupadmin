@@ -8,7 +8,9 @@ class Server < ActiveRecord::Base
   # Keep these in order from highest to lowest frequency
   FREQUENCY_BUCKETS = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly']
 
-  def is_active?
+  scope :active, where(:state => 'active')
+  
+  def active?
     state == 'active'
   end
 
@@ -52,16 +54,39 @@ class Server < ActiveRecord::Base
     @instance ||= AWS.servers.all(backup_set_filter).first
   end
   
+  def volume_id
+    mapping = instance.block_device_mapping.detect{|m| m['deviceName'] == block_device}
+    mapping['volumeId'] if mapping
+  end
+  
   def ip
     instance.ip_address
   end
   
   def snapshots
-    @snapshots ||= AWS.snapshots.all(backup_set_filter)
+    @snapshots ||= AWS.snapshots.all(backup_set_filter).sort_by(&:created_at).map{|s| Snapshot.new(self, s)}
+  end
+  
+  def snapshots_for_frequency_buckets(*buckets) 
+    snapshots.reject { |s| (s.frequency_buckets & buckets).empty? }
+  end
+  
+  def oldest_more_frequent_snapshot(frequency_bucket)
+    snapshots_for_frequency_buckets(self.class.get_higher_frequency_buckets(frequency_bucket)).first
+  end
+  
+  def snapshot_in_progress?
+    !!AWS.snapshots.all('volume-id' => volume_id).detect{|s| !s.ready?}
+  end
+  
+  def service_check
+    # check that system_backup_id can find a server with an public_ip_address
+    # verify that the block point is attached
+    # verify that the volume exists (df -k or something)
   end
   
   private 
-  
+    
     def sudo_command(command)
       "sudo env PATH=$PATH #{command}"
     end

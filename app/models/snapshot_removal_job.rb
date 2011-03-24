@@ -1,10 +1,6 @@
 class SnapshotRemovalJob
   def perform
-    Server.find(:all).each { |server|
-      if server.is_active?
-        cycle_through_buckets(server)
-      end
-    }
+    Server.active.each { |server| cycle_through_buckets(server) }
   end
 
   def cycle_through_buckets(server)
@@ -19,9 +15,9 @@ class SnapshotRemovalJob
     snapshots = snapshots && snapshots.length > number_allowed ? snapshots.slice(0, snapshots.length - number_allowed) : nil
     snapshots.each {|snapshot|
       if (Snapshot.get_frequency_buckets(snapshot).length == 1)
-        Snapshot.remove_snapshot(server, snapshot)
+        snapshot.destroy
       else
-        Snapshot.remove_from_frequency_bucket(server, snapshot, frequency_bucket)
+        snapshot.remove_frequency_bucket(frequency_bucket)
       end
     } if (snapshots)
   end

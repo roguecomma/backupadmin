@@ -1,99 +1,116 @@
 require 'spec_helper'
 
 describe Snapshot do
-  before(:each) {
-    @server = create_server()
-    @snapshot_h1 = create_fake_snapshot({:created_at => Time.now - (60*60), :tags => {Snapshot.tag_name("hourly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_h2 = create_fake_snapshot({:created_at => Time.now - (2*60*60), :tags => {Snapshot.tag_name("hourly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_d = create_fake_snapshot({:created_at => Time.now - (24*60*60), :tags => {Snapshot.tag_name("daily") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_w = create_fake_snapshot({:created_at => Time.now - (7*24*60*60), :tags => {Snapshot.tag_name("weekly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_m = create_fake_snapshot({:created_at => Time.now - (30*24*60*60), :tags => {Snapshot.tag_name("monthly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_q = create_fake_snapshot({:created_at => Time.now - (90*24*60*60), :tags => {Snapshot.tag_name("quarterly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-    @snapshot_y = create_fake_snapshot({:created_at => Time.now - (150*24*60*60), :tags => {Snapshot.tag_name("yearly") => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
-  }
-
-  it 'should get the correct frequency buckets from the tags' do
-    Snapshot.get_frequency_buckets(@snapshot_h1).should eql(['hourly'])
-    @snapshot_h1.tags[Snapshot.tag_name("weekly")] = nil
-    Snapshot.get_frequency_buckets(@snapshot_h1).should include('hourly', 'weekly')
-    @snapshot_h1.tags[Snapshot.tag_name("weekly")] = nil
-    @snapshot_h1.tags[Snapshot.tag_name("daily")] = nil
-    @snapshot_h1.tags[Snapshot.tag_name("monkey")] = nil
-    @snapshot_h1.tags['junk'] = nil
-    @snapshot_h1.tags["otherstuff#{Snapshot::FREQUENCY_BUCKET_PREFIX}whipple"] = nil
-    Snapshot.get_frequency_buckets(@snapshot_h1).should include('hourly', 'weekly', 'daily', 'monkey')
+  before(:each) do
+    @server = create_server
+    @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G')
   end
 
-  it 'should filter and sort correctly' do
-    ordered = [@snapshot_y, @snapshot_q, @snapshot_m, @snapshot_w, @snapshot_d, @snapshot_h2, @snapshot_h1]
-    backwards = [@snapshot_h1, @snapshot_h2, @snapshot_d, @snapshot_w, @snapshot_m, @snapshot_q, @snapshot_y]
-    mixed = [@snapshot_m, @snapshot_h1, @snapshot_d, @snapshot_q, @snapshot_y, @snapshot_w, @snapshot_h2]
-    Snapshot.filter_snapshots_for_buckets_sort_by_age(mixed, ['hourly']).should eql([@snapshot_h2, @snapshot_h1])
-    Snapshot.filter_snapshots_for_buckets_sort_by_age(mixed, ['daily','hourly']).should eql([@snapshot_d, @snapshot_h2, @snapshot_h1])
-    Snapshot.filter_snapshots_for_buckets_sort_by_age(mixed, ['daily','hourly','yearly']).should eql([@snapshot_y, @snapshot_d, @snapshot_h2, @snapshot_h1])
-    Snapshot.filter_snapshots_for_buckets_sort_by_age(mixed, Server::FREQUENCY_BUCKETS).should eql(ordered)
-    Snapshot.filter_snapshots_for_buckets_sort_by_age(backwards, Server::FREQUENCY_BUCKETS).should eql(ordered)
-    Snapshot.filter_snapshots_for_buckets_sort_by_age(ordered, Server::FREQUENCY_BUCKETS).should eql(ordered)
+  describe '.find' do
+    before(:each) do
+      @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
+      AWS.create_tags(@aws_snapshot.id, 'system-backup-id' => @server.system_backup_id)
+    end
+    
+    it 'should return a snapshot wrapping the aws object' do
+      snapshot = Snapshot.find(@aws_snapshot.id)
+      snapshot.should be_instance_of(Snapshot)
+      snapshot.id.should == @aws_snapshot.id
+    end
+    
+    it 'should return nil for a nonexistent snapshot' do
+      Snapshot.find('zzz').should == nil
+    end
+    
+    it 'should look up server for snapshot' do
+      snapshot = Snapshot.find(@aws_snapshot.id)
+      snapshot.server.should == @server
+    end
   end
 
-  it 'should find oldest snapshot in higher frequency buckets' do
-    Snapshot.stub!(:fetch_snapshots).and_return { [@snapshot_h1, @snapshot_h2] }
-    Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(@server, 'daily').should eql(@snapshot_h2)
-    Snapshot.stub!(:fetch_snapshots).and_return { [@snapshot_h1, @snapshot_h2, @snapshot_d] }
-    Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(@server, 'weekly').should eql(@snapshot_d)
-    Snapshot.stub!(:fetch_snapshots).and_return { [@snapshot_h1, @snapshot_h2, @snapshot_d, @snapshot_w] }
-    Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(@server, 'monthly').should eql(@snapshot_w)
-    Snapshot.stub!(:fetch_snapshots).and_return { [@snapshot_h1, @snapshot_h2, @snapshot_d, @snapshot_w, @snapshot_m] }
-    Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(@server, 'quarterly').should eql(@snapshot_m)
-    Snapshot.stub!(:fetch_snapshots).and_return { [@snapshot_h1, @snapshot_h2, @snapshot_d, @snapshot_w, @snapshot_q] }
-    Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(@server, 'yearly').should eql(@snapshot_q)
-    Snapshot.stub!(:fetch_snapshots).and_return { [] }
-    Snapshot.find_oldest_snapshot_in_higher_frequency_buckets(@server, 'yearly').should be_nil
+  describe '#frequency_buckets' do
+    before(:each) do
+      @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
+      @snapshot = Snapshot.new(@server, @aws_snapshot)
+    end
+    
+    it 'should extract buckets from tags' do
+      AWS.create_tags(@snapshot.id,
+        Snapshot.tag_name("monthly") => nil, 
+        Snapshot.tag_name("yearly") => nil
+      )
+      @aws_snapshot.reload
+      
+      @snapshot.frequency_buckets.should == ["monthly", "yearly"]
+    end
+    
+    it 'should ignore junk tags' do
+      aws = create_fake_snapshot({:tags => {
+        Snapshot.tag_name("monthly") => nil, 
+        Snapshot.tag_name("daily") => nil,
+        'junk' => 'daily',
+        "whipple#{Snapshot::FREQUENCY_BUCKET_PREFIX}whipple" => nil,
+        'system-backup-id' => 'test.host'}})
+        
+      snap = Snapshot.new(@server, aws)
+      snap.frequency_buckets.should == ["monthly", "daily"]
+    end
+  end
+  
+  describe '#add_frequency_bucket' do
+    before(:each) do
+      @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
+      @snapshot = Snapshot.new(@server, @aws_snapshot)
+    end
+    
+    it 'should raise exception if add tag raises exception' do
+      AWS.stub!(:create_tags).and_raise("hey")
+      HoptoadNotifier.should_receive(:notify)
+      
+      @snapshot.add_frequency_bucket('daily')
+    end
+
+    it 'should add tag to snapshot' do
+      @snapshot.add_frequency_bucket('daily')
+      @snapshot.frequency_buckets.should include('daily')
+    end
+  end
+  
+  describe '#remove_frequency_bucket' do
+    before(:each) do
+      @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
+      @snapshot = Snapshot.new(@server, @aws_snapshot)
+      @snapshot.add_frequency_bucket('daily')
+    end
+    
+    it 'should raise exception if delete tag raises exception' do
+      AWS.stub!(:delete_tags).and_raise("hey")
+      HoptoadNotifier.should_receive(:notify)
+      
+      @snapshot.remove_frequency_bucket('daily')
+    end
+
+    it 'should remove the frequency tag' do
+      @snapshot.remove_frequency_bucket('daily')
+      @snapshot.frequency_buckets.should_not include('daily')
+    end
   end
 
-  # unfortunately untestable at this time..need to mock Net::SSH
-  #it 'should raise exception if ssh returns data' do
-  #  Net::SSH.stub!(:start).and_return { ssh_output = 'some output' }
-  #  lambda { Snapshot.run_ssh_command(@server, nil, 'cmd', 'exc string') }.should raise_error
-  #end
-  #it 'should not raise exception if ssh returns no data' do
-  #  Net::SSH.stub!(:start)
-  #  lambda { Snapshot.run_ssh_command(@server, nil, 'cmd', 'exc string') }.should_not raise_error
-  #end
-
-  it 'should raise exception if delete tag raises exception' do
-    Snapshot.stub!(:delete_tag).and_return{raise 'hey'}
-    HoptoadNotifier.should_receive(:notify)
-    Snapshot.remove_from_frequency_bucket(@server, @snapshot_h1, 'daily')
-  end
-
-  it 'should not raise exception if delete tag does not raise exception' do
-    Snapshot.stub!(:delete_tag)
-    HoptoadNotifier.should_receive(:notify).at_most(0).times
-    Snapshot.remove_from_frequency_bucket(@server, @snapshot_h1, 'daily')
-  end
-
-  it 'should raise exception if add tag raises exception' do
-    Snapshot.stub!(:create_tag).and_return{raise 'hey'}
-    HoptoadNotifier.should_receive(:notify)
-    Snapshot.add_to_frequency_bucket(@server, @snapshot_h1, 'daily')
-  end
-
-  it 'should not raise exception if add tag does not raise exception' do
-    Snapshot.stub!(:create_tag)
-    HoptoadNotifier.should_receive(:notify).at_most(0).times
-    Snapshot.add_to_frequency_bucket(@server, @snapshot_h1, 'daily')
-  end
-
-  it 'should raise exception if remove snapshot raises exception' do
-    @snapshot_h1.stub!(:destroy).and_return{raise 'hey'}
-    HoptoadNotifier.should_receive(:notify)
-    Snapshot.remove_snapshot(@server, @snapshot_h1)
-  end
-
-  it 'should not raise exception if remove snapshot does not raise exception' do
-    @snapshot_h1.stub!(:destroy)
-    HoptoadNotifier.should_receive(:notify).at_most(0).times
-    Snapshot.remove_snapshot(@server, @snapshot_h1)
+  describe '#destroy' do
+    before(:each) do
+      @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id)
+      @snapshot = Snapshot.new(@server, @aws_snapshot)
+    end
+    
+    it 'should destroy the underlying snapshot' do
+      @aws_snapshot.should_receive(:destroy)
+      @snapshot.destroy
+    end
+    
+    it 'should raise exception if remove snapshot raises exception' do
+      @aws_snapshot.stub!(:destroy).and_raise("NO!")
+      HoptoadNotifier.should_receive(:notify)
+      @snapshot.destroy
+    end
   end
 end
