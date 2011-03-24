@@ -4,21 +4,23 @@ class SnapshotRemovalJob
   end
 
   def cycle_through_buckets(server)
-    snapshots = Snapshot.find_snapshots_for_server(server)
     Server::FREQUENCY_BUCKETS.each { |frequency_bucket|
-      remove_unneeded_snapshots(server, snapshots, frequency_bucket, server.get_number_allowed(frequency_bucket))
+      remove_unneeded_snapshots(server, frequency_bucket, server.get_number_allowed(frequency_bucket))
     }
   end
 
-  def remove_unneeded_snapshots(server, snapshots, frequency_bucket, number_allowed)
-    snapshots = Snapshot.filter_snapshots_for_buckets_sort_by_age(snapshots, [frequency_bucket])
-    snapshots = snapshots && snapshots.length > number_allowed ? snapshots.slice(0, snapshots.length - number_allowed) : nil
-    snapshots.each {|snapshot|
-      if (Snapshot.get_frequency_buckets(snapshot).length == 1)
-        snapshot.destroy
-      else
-        snapshot.remove_frequency_bucket(frequency_bucket)
+  def remove_unneeded_snapshots(server, frequency_bucket, number_allowed)
+    snapshots = server.snapshots_for_frequency_buckets(frequency_bucket)
+    prune_index = snapshots.length - number_allowed - 1
+    unless prune_index < 0
+      prune_snapshots = snapshots.slice(0, prune_index)
+      prune_snapshots.each do |snapshot|
+        if (snapshot.frequency_buckets.length == 1)
+          snapshot.destroy
+        else
+          snapshot.remove_frequency_bucket(frequency_bucket)
+        end
       end
-    } if (snapshots)
+    end
   end
 end

@@ -95,3 +95,7 @@ def create_snapshot(attributes = {})
     AWS.create_tags(snap.id, {'system-backup-id' => server.system_backup_id}.merge(attributes[:tags]))
   end
 end
+
+def create_volume(attributes = {})
+  AWS.volumes.create(attributes.reverse_merge(:availability_zone => 'us-east-1d', :size => '100G'))
+end
