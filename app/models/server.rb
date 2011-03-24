@@ -10,6 +10,18 @@ class Server < ActiveRecord::Base
 
   scope :active, where(:state => 'active')
   
+  def self.get_interval_in_seconds(frequency_bucket)
+    return case frequency_bucket
+      when 'minute'     then 20.minutes
+      when 'hourly'     then 1.hour
+      when 'daily'      then 1.day
+      when 'weekly'     then 1.week
+      when 'monthly'    then 30.days
+      when 'quarterly'  then 90.days
+      when 'yearly'     then 1.year
+    end
+  end
+  
   def active?
     state == 'active'
   end
@@ -22,24 +34,12 @@ class Server < ActiveRecord::Base
     FREQUENCY_BUCKETS.select{|frequency_bucket| respond_to?(frequency_bucket +'?') && send(frequency_bucket +'?')}.first
   end
 
-  def get_number_allowed(frequency_bucket)
-    respond_to?(frequency_bucket) ? send(frequency_bucket) : 0
-  end
-
-  def self.get_higher_frequency_buckets(frequency_bucket)
+  def higher_frequency_buckets(frequency_bucket)
     return FREQUENCY_BUCKETS.slice(0, FREQUENCY_BUCKETS.index(frequency_bucket))
   end
-
-  def self.get_interval_in_seconds(frequency_bucket)
-    return case frequency_bucket
-      when 'minute'     then 20.minutes
-      when 'hourly'     then 1.hour
-      when 'daily'      then 1.day
-      when 'weekly'     then 1.week
-      when 'monthly'    then 30.days
-      when 'quarterly'  then 90.days
-      when 'yearly'     then 1.year
-    end
+  
+  def get_number_allowed(frequency_bucket)
+    respond_to?(frequency_bucket) ? send(frequency_bucket) : 0
   end
   
   def ssh_exec(command, exception_string = nil)
@@ -72,7 +72,7 @@ class Server < ActiveRecord::Base
   end
   
   def oldest_more_frequent_snapshot(frequency_bucket)
-    snapshots_for_frequency_buckets(self.class.get_higher_frequency_buckets(frequency_bucket)).first
+    snapshots_for_frequency_buckets(*higher_frequency_buckets(frequency_bucket)).first
   end
   
   def snapshot_in_progress?

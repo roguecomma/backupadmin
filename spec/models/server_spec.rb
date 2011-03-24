@@ -131,6 +131,11 @@ describe Server do
   end
   
   describe '#oldest_more_frequent_snapshot' do
+    before(:each) do
+      @server = create_server
+      @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G').reload      
+    end
+    
     it 'should return nil if not other snapshots' do
       @server.oldest_more_frequent_snapshot('yearly').should == nil
     end
@@ -139,6 +144,31 @@ describe Server do
       create_snapshot(:server => @server, :volume => @volume, :tags => {
         "frequency-bucket-#{@server.highest_frequency_bucket}" => nil
       })
+      
+      @server.oldest_more_frequent_snapshot(@server.highest_frequency_bucket).should == nil
+    end
+    
+    it 'should return the oldest snapshot of a higher frequency' do
+      # old, but not less frequent
+      Timecop.freeze(6.hours.ago) do
+        create_snapshot(:server => @server, :volume => @volume, :tags => {
+          "frequency-bucket-monthly" => nil
+        })
+      end
+      # old, and more frequent
+      Timecop.freeze(5.hours.ago) do
+        @oldest = create_snapshot(:server => @server, :volume => @volume, :tags => {
+          "frequency-bucket-weekly" => nil
+        })
+      end
+      # newer, but more frequent
+      Timecop.freeze(4.hours.ago) do
+        create_snapshot(:server => @server, :volume => @volume, :tags => {
+          "frequency-bucket-daily" => nil
+        })
+      end
+      
+      @server.oldest_more_frequent_snapshot('monthly').id.should == @oldest.id
     end
   end
   
