@@ -62,6 +62,21 @@ describe Server do
     server.get_number_allowed('yearly').should be(5)
   end
   
+  describe '#instance' do
+    it 'should be nil if no servers are tagged with the backup id' do
+      create_server.instance.should == nil
+    end
+    
+    it 'should return a single instance tagged with the backup id' do
+      server = create_server
+      3.times { AWS.run_instances 'ami-123', 1, 1 }
+      instance = AWS.servers[1]
+      AWS.create_tags instance.id, {'system-backup-id' => server.system_backup_id}
+      
+      server.instance.id.should == instance.id
+    end
+  end
+  
   describe '#snapshots' do
     before(:each) do
       @server = create_server
