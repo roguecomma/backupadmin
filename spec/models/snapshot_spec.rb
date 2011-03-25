@@ -5,7 +5,11 @@ describe Snapshot do
     @server = create_server
     @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G')
   end
-
+  
+  after(:each) do
+    Delayed::Worker.delay_jobs = true
+  end
+  
   describe '.find' do
     before(:each) do
       @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
@@ -60,7 +64,8 @@ describe Snapshot do
   describe '#add_frequency_bucket' do
     before(:each) do
       @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
-      @snapshot = Snapshot.new(@server, @aws_snapshot)
+      @snapshot = Snapshot.new(@server, @aws_snapshot)    
+      Delayed::Worker.delay_jobs = false 
     end
     
     it 'should raise exception if add tag raises exception' do
@@ -84,6 +89,7 @@ describe Snapshot do
     end
     
     it 'should raise exception if delete tag raises exception' do
+      Delayed::Worker.delay_jobs = false
       AWS.stub!(:delete_tags).and_raise("hey")
       HoptoadNotifier.should_receive(:notify)
       

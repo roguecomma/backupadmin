@@ -5,9 +5,10 @@ describe SnapshotCreationJob do
     @server = create_server({:minute => 0, :hourly => 0, :daily => 1, :weekly => 1})
     @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G')
     @job = SnapshotCreationJob.new('daily')
-    Snapshot.stub!(:do_snapshot_create)
-    Snapshot.stub!(:add_to_frequency_bucket)
-    Snapshot.stub!(:run_ssh_command)
+  end
+  
+  after(:each) do
+    Delayed::Worker.delay_jobs = true
   end
   
   describe 'initialize' do
@@ -33,6 +34,7 @@ describe SnapshotCreationJob do
   end
 
   it 'should put snapshot into another frequency bucket' do
+    Delayed::Worker.delay_jobs = false
     aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
     aws_snapshot.created_at = Time.now - 1.day
     AWS.create_tags aws_snapshot.id, Snapshot.tag_name('daily') => nil, 'system-backup-id' => @server.system_backup_id

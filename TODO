@@ -1,6 +1,5 @@
 MUST
 * fix mysql locking
-* make tag adjustment async
 * use hostnames
 * use whenever gem for cron tasks
 

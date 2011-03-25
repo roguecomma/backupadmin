@@ -105,9 +105,7 @@ class Snapshot
   end
 
   def add_frequency_bucket(frequency_bucket)
-    AWS.tags.create({:resource_id => id, :key => self.class.tag_name(frequency_bucket), :value => nil}).tap do
-      SnapshotEvent.log(server, 'add frequency tag', "Snapshot #{id} add to bucket -> #{frequency_bucket}.")
-    end
+    delay.add_bucket_tag(frequency_bucket)
     frequency_buckets << frequency_bucket unless frequency_bucket.include?(frequency_bucket)
   rescue RuntimeError => e
     custom_notify('AddTagToSnapshot', "Failed adding Snapshot #{id} to bucket -> #{frequency_bucket}.",
@@ -117,9 +115,7 @@ class Snapshot
   end
 
   def remove_frequency_bucket(frequency_bucket)
-    AWS.delete_tags(id, self.class.tag_name(frequency_bucket) => nil).tap do
-      SnapshotEvent.log(server, 'remove frequency tag', "Snapshot #{id} removed from bucket -> #{frequency_bucket}.")
-    end
+    delay.remove_bucket_tag(frequency_bucket)
     frequency_buckets.delete(frequency_bucket) if frequency_bucket.include?(frequency_bucket)
   rescue RuntimeError => e
     custom_notify('RemoveTagFromSnapshot', "Failed removing Snapshot #{id} from bucket -> #{frequency_bucket}.",
@@ -137,6 +133,18 @@ class Snapshot
   end
   
 private
+  
+  def add_bucket_tag(frequency_bucket)
+    AWS.tags.create({:resource_id => id, :key => self.class.tag_name(frequency_bucket), :value => nil}).tap do
+      SnapshotEvent.log(server, 'add frequency tag', "Snapshot #{id} add to bucket -> #{frequency_bucket}.")
+    end
+  end
+  
+  def remove_bucket_tag(frequency_bucket)
+    AWS.delete_tags(id, self.class.tag_name(frequency_bucket) => nil).tap do
+      SnapshotEvent.log(server, 'remove frequency tag', "Snapshot #{id} removed from bucket -> #{frequency_bucket}.")
+    end
+  end
   
   def aws_snapshot
     @aws_snapshot
