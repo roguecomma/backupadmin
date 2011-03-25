@@ -18,7 +18,7 @@ class SnapshotCreationJob < Struct.new(:frequency_bucket)
     if server.is_highest_frequency_bucket?(@frequency_bucket)
       Snapshot.take_snapshot(server, @frequency_bucket)
     else
-      if (snapshot = server.oldest_more_frequent_snapshot(@frequency_bucket))
+      if (snapshot = server.oldest_higher_frequency_snapshot(@frequency_bucket))
         snapshot.add_frequency_bucket(@frequency_bucket)
       end
     end

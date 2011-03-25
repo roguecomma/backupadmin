@@ -1,5 +1,6 @@
-* we use higher_frequency and more_frequent interchangeably
-* remove all fake_snapshot references
+* remove all fake_snapshot references.  Use mocks.
 * convert factories to FactoryGirl
 * extract Volume as a model?  Server 1->* Volume ->* Snapshot
-* factory out buckets into their own enum-type thing
+* factor out buckets into their own enum-type thing
+* formtastic for forms
+* use whenever gem for cron tasks

@@ -71,7 +71,7 @@ class Server < ActiveRecord::Base
     snapshots.reject { |s| (s.frequency_buckets & buckets).empty? }
   end
   
-  def oldest_more_frequent_snapshot(frequency_bucket)
+  def oldest_higher_frequency_snapshot(frequency_bucket)
     snapshots_for_frequency_buckets(*higher_frequency_buckets(frequency_bucket)).first
   end
   

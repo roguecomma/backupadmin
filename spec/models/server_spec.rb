@@ -130,14 +130,14 @@ describe Server do
     end
   end
   
-  describe '#oldest_more_frequent_snapshot' do
+  describe '#oldest_higher_frequency_snapshot' do
     before(:each) do
       @server = create_server
       @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G').reload      
     end
     
     it 'should return nil if not other snapshots' do
-      @server.oldest_more_frequent_snapshot('yearly').should == nil
+      @server.oldest_higher_frequency_snapshot('yearly').should == nil
     end
     
     it 'should return nil for the most frequent bucket' do
@@ -145,7 +145,7 @@ describe Server do
         "frequency-bucket-#{@server.highest_frequency_bucket}" => nil
       })
       
-      @server.oldest_more_frequent_snapshot(@server.highest_frequency_bucket).should == nil
+      @server.oldest_higher_frequency_snapshot(@server.highest_frequency_bucket).should == nil
     end
     
     it 'should return the oldest snapshot of a higher frequency' do
@@ -168,7 +168,7 @@ describe Server do
         })
       end
       
-      @server.oldest_more_frequent_snapshot('monthly').id.should == @oldest.id
+      @server.oldest_higher_frequency_snapshot('monthly').id.should == @oldest.id
     end
   end
   
