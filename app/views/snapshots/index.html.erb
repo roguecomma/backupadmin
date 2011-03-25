@@ -2,24 +2,20 @@
 
 <table>
   <tr>
-    <th>Name</th>
     <th>ID</th>
     <th>Volume</th>
     <th>Status</th>
     <th>Started</th>
-    <th>Backup Id</th>
     <th>Buckets</th>
   </tr>
 
 <% @snapshots.each do |snapshot| %>
   <tr>
-    <td><%= snapshot.tags[Snapshot::NAME_TAG] %></td>
     <td><%= snapshot.id %></td>
     <td><%= snapshot.volume_id %></td>
     <td><%= snapshot.state %></td>
     <td><%= snapshot.created_at %></td>
-    <td><%= snapshot.tags[Snapshot::BACKUP_ID_TAG] %></td>
-    <td><%= Snapshot.get_frequency_buckets(snapshot).join(', ') %></td>
+    <td><%= snapshot.frequency_buckets.join(", ") %></td>
   </tr>
 <% end %>
 </table>

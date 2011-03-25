@@ -10,7 +10,7 @@
 
 <% @snapshot_events.each do |snapshot_event| %>
   <tr>
-    <td><%= snapshot_event.server ? snapshot_event.server.name : snapshot_event.server_id %></td>
+    <td><%= snapshot_event.server.name if snapshot_event.server %></td>
     <td><%= snapshot_event.event_type %></td>
     <td><%= snapshot_event.created_at %></td>
     <td><%= snapshot_event.log %></td>

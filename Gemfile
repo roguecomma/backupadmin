@@ -7,11 +7,13 @@ gem 'mysql', '~> 2.8.0'
 gem 'delayed_job', '2.1.4.exp1'
 gem 'cronedit', '0.3.0'
 #gem 'fog', '~> 0.5'
-#gem 'fog', :path => '../fog'
-gem 'fog', :git => 'git@github.com:geemus/fog.git'
+gem 'fog', :path => '../fog'
+#gem 'fog', :git => 'git@github.com:geemus/fog.git'
 gem 'flutie' # Default styling
 gem 'haml' # SCSS support
 gem 'formtastic'
+gem 'inherited_resources'
+gem 'has_scope'
 
 gem 'hoptoad_notifier'
 gem 'newrelic_rpm'
@@ -19,4 +21,6 @@ gem 'newrelic_rpm'
 group :test, :development do
   gem 'rspec', '>= 2.5'
   gem 'rspec-rails', '>= 2.5'
+  gem 'fakeweb'
+  gem 'timecop'
 end

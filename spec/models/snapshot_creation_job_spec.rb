@@ -1,13 +1,24 @@
 require 'spec_helper'
 
 describe SnapshotCreationJob do
-  before(:each) {
+  before(:each) do
     @server = create_server({:minute => 0, :hourly => 0, :daily => 1, :weekly => 1})
+    @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G')
     @job = SnapshotCreationJob.new('daily')
     Snapshot.stub!(:do_snapshot_create)
     Snapshot.stub!(:add_to_frequency_bucket)
     Snapshot.stub!(:run_ssh_command)
-  }
+  end
+  
+  describe 'initialize' do
+    it 'should set frequency_bucket' do
+      @job.frequency_bucket.should == 'daily'
+    end
+    
+    it 'should set queued_time' do
+      @job.queued_time.should be_within(1).of(Time.now)
+    end
+  end
 
   it 'should create a new snapshot' do
     Snapshot.stub!(:snapshot_in_progress?).and_return(false)
@@ -22,18 +33,19 @@ describe SnapshotCreationJob do
   end
 
   it 'should put snapshot into another frequency bucket' do
-    @snapshot = create_fake_snapshot({:created_at => Time.now - (24*60*60), :tags => {Snapshot.tag_name('daily') => nil, 'system-backup-id' => 'some.elastic.ip.com'}})
+    aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
+    aws_snapshot.created_at = Time.now - 1.day
+    AWS.create_tags aws_snapshot.id, Snapshot.tag_name('daily') => nil, 'system-backup-id' => @server.system_backup_id
+    @snapshot = Snapshot.new(@server, aws_snapshot)
+
     @job = SnapshotCreationJob.new('yearly')
-    Snapshot.stub!(:find_oldest_snapshot_in_higher_frequency_buckets).and_return(@snapshot)
-    Snapshot.stub!(:add_to_frequency_bucket)
-    Snapshot.should_receive(:add_to_frequency_bucket).with(@server, @snapshot, 'yearly')
     @job.run(@server)
+    @snapshot.frequency_buckets.should include('yearly')
   end
 
   it 'should do nothing since not most frequent and no snapshots' do
     @job = SnapshotCreationJob.new('weekly')
-    Snapshot.stub!(:find_oldest_snapshot_in_higher_frequency_buckets).and_return(nil)
-    Snapshot.should_receive(:add_to_frequency_bucket).at_most(0).times
+    Snapshot.should_not_receive(:take_snapshot)
     @job.run(@server)
   end
 
