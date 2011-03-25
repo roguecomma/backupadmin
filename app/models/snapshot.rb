@@ -9,7 +9,7 @@ class Snapshot
     @aws_snapshot = aws_snapshot
   end
   
-  delegate :id, :created_at, :state, :to => :aws_snapshot
+  delegate :id, :created_at, :state, :volume_id, :to => :aws_snapshot
   
   class << self
     def find(snapshot_id)

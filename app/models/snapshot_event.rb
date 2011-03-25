@@ -2,7 +2,8 @@ class SnapshotEvent < ActiveRecord::Base
   belongs_to :server
 
   scope :join_server, includes(:server).order("#{self.table_name}.created_at DESC")
-
+  scope :for_server_id, lambda{|id| where(:server_id => id)}
+  
   def display_list(params)
   end
 

@@ -12,6 +12,8 @@ gem 'fog', :path => '../fog'
 gem 'flutie' # Default styling
 gem 'haml' # SCSS support
 gem 'formtastic'
+gem 'inherited_resources'
+gem 'has_scope'
 
 gem 'hoptoad_notifier'
 gem 'newrelic_rpm'
