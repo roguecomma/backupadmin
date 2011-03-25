@@ -1,8 +1,6 @@
 require 'net/ssh'
 
 class Server < ActiveRecord::Base
-  has_many :backups
-
   BACKUP_ID_TAG = 'system-backup-id'
   
   # Keep these in order from highest to lowest frequency
