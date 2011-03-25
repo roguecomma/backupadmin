@@ -4,3 +4,5 @@
 * factor out buckets into their own enum-type thing
 * formtastic for forms
 * use whenever gem for cron tasks
+* use JSON for api, not XML
+* factor out snapshotting strategies

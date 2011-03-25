@@ -1,8 +1,7 @@
 Backupadmin::Application.configure do
   # Settings specified here will take precedence over those in config/application.rb
 
-  # DJ
-  ::AppConfig.defer_background_tasks = true
+  Delayed::Worker.delay_jobs = false
 
 
   # In the development environment your application's code is reloaded on
