@@ -9,6 +9,16 @@ describe SnapshotCreationJob do
     Snapshot.stub!(:add_to_frequency_bucket)
     Snapshot.stub!(:run_ssh_command)
   end
+  
+  describe 'initialize' do
+    it 'should set frequency_bucket' do
+      @job.frequency_bucket.should == 'daily'
+    end
+    
+    it 'should set queued_time' do
+      @job.queued_time.should be_within(1).of(Time.now)
+    end
+  end
 
   it 'should create a new snapshot' do
     Snapshot.stub!(:snapshot_in_progress?).and_return(false)
