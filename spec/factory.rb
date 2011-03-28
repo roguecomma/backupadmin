@@ -56,9 +56,9 @@ module Factory
   build Server do |attributes|
     attributes.reverse_merge!(
       :name => 'test-server',
-      :system_backup_id => 'some.elastic.ip.com',
       :mount_point => '/volfake',
-      :block_device => '/dev/sdfake'
+      :block_device => '/dev/sdfake',
+      :hostname => "server-#{Factory.counter('server')}.local"
     )
     attributes
   end
@@ -81,7 +81,7 @@ end
 
 def create_fake_snapshot(attributes)
   attributes[:created_at] = Time.now unless attributes.include?(:created_at)
-  attributes[:tags] = {Snapshot.tag_name('daily') => nil, 'system-backup-id' => 'some.elastic.ip.com'} unless attributes.include?(:tags)
+  attributes[:tags] = {Snapshot.tag_name('daily') => nil, Server::BACKUP_ID_TAG => 'some.elastic.ip.com'} unless attributes.include?(:tags)
   attributes[:id] = 'snap-fake-747473' unless attributes.include?(:id)
   Factory::Blank.new(attributes)
 end
@@ -92,7 +92,7 @@ def create_snapshot(attributes = {})
   raise ":server and :volume are required attributes" unless server && volume
   
   Snapshot.new(server, AWS.snapshots.create(:volume_id => volume.id).reload).tap do |snap|
-    AWS.create_tags(snap.id, {'system-backup-id' => server.system_backup_id}.merge(attributes[:tags]))
+    AWS.create_tags(snap.id, {Server::BACKUP_ID_TAG => server.system_backup_id}.merge(attributes[:tags]))
   end
 end
 

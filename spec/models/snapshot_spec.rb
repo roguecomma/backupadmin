@@ -13,7 +13,7 @@ describe Snapshot do
   describe '.find' do
     before(:each) do
       @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
-      AWS.create_tags(@aws_snapshot.id, 'system-backup-id' => @server.system_backup_id)
+      AWS.create_tags(@aws_snapshot.id, Server::BACKUP_ID_TAG => @server.system_backup_id)
     end
     
     it 'should return a snapshot wrapping the aws object' do
@@ -21,7 +21,7 @@ describe Snapshot do
       snapshot.should be_instance_of(Snapshot)
       snapshot.id.should == @aws_snapshot.id
     end
-    
+
     it 'should return nil for a nonexistent snapshot' do
       Snapshot.find('zzz').should == nil
     end
@@ -54,7 +54,7 @@ describe Snapshot do
         Snapshot.tag_name("daily") => nil,
         'junk' => 'daily',
         "whipple#{Snapshot::FREQUENCY_BUCKET_PREFIX}whipple" => nil,
-        'system-backup-id' => 'test.host'}})
+        Server::BACKUP_ID_TAG => 'test.host'}})
         
       snap = Snapshot.new(@server, aws)
       snap.frequency_buckets.should == ["monthly", "daily"]

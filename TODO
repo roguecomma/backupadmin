@@ -1,6 +1,5 @@
 MUST
 * fix mysql locking
-* use hostnames
 * capify
 
 SHOULD

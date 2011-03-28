@@ -37,7 +37,7 @@ describe SnapshotCreationJob do
     Delayed::Worker.delay_jobs = false
     aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
     aws_snapshot.created_at = Time.now - 1.day
-    AWS.create_tags aws_snapshot.id, Snapshot.tag_name('daily') => nil, 'system-backup-id' => @server.system_backup_id
+    AWS.create_tags aws_snapshot.id, Snapshot.tag_name('daily') => nil, Server::BACKUP_ID_TAG => @server.system_backup_id
     @snapshot = Snapshot.new(@server, aws_snapshot)
 
     @job = SnapshotCreationJob.new('yearly')

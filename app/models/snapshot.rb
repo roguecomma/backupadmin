@@ -16,7 +16,8 @@ class Snapshot
       snapshot = AWS.snapshots.get(snapshot_id)
       
       if snapshot
-        server = Server.where(:system_backup_id => snapshot.tags['system-backup-id']).first
+        # TODO: refactor so that the tag name doesn't leak outside Server.  Server.for_snapshot(x)
+        server = Server.where(:system_backup_id => snapshot.tags[Server::BACKUP_ID_TAG]).first
         new(server, snapshot) if server
       end
     end

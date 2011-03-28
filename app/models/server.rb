@@ -6,7 +6,13 @@ class Server < ActiveRecord::Base
   # Keep these in order from highest to lowest frequency
   FREQUENCY_BUCKETS = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly']
 
+  validates_presence_of :name, :hostname
+  validates_numericality_of :minute, :hourly, :daily, :weekly, :monthly, :quarterly, :yearly, 
+                            :allows_nil => false, :greater_than_or_equal_to => 0
+  
   scope :active, where(:state => 'active')
+  
+  after_create :set_system_backup_id
   
   def self.get_interval_in_seconds(frequency_bucket)
     return case frequency_bucket
@@ -49,7 +55,7 @@ class Server < ActiveRecord::Base
   end
   
   def instance
-    @instance ||= AWS.servers.all(backup_set_filter).first
+    @instance ||= AWS.servers.all(instance_filter).first
   end
   
   def volume_id
@@ -62,7 +68,7 @@ class Server < ActiveRecord::Base
   end
   
   def snapshots
-    @snapshots ||= AWS.snapshots.all(backup_set_filter).sort_by(&:created_at).map{|s| Snapshot.new(self, s)}
+    @snapshots ||= AWS.snapshots.all(snapshot_filter).sort_by(&:created_at).map{|s| Snapshot.new(self, s)}
   end
   
   def snapshots_for_frequency_buckets(*buckets) 
@@ -99,8 +105,15 @@ class Server < ActiveRecord::Base
       ssh_user != 'root'
     end
     
-    def backup_set_filter
+    def snapshot_filter
       {"tag:#{BACKUP_ID_TAG}" => system_backup_id}
     end
     
+    def instance_filter
+      {'dns-name' => hostname}
+    end
+    
+    def set_system_backup_id
+      self.update_attribute(:system_backup_id, "#{id}-#{name.underscore.gsub(/[_ ]/, '-')}")
+    end
 end
