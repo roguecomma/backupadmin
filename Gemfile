@@ -17,6 +17,11 @@ gem 'whenever'
 gem 'hoptoad_notifier'
 gem 'newrelic_rpm'
 
+group :deploy do
+  gem 'capistrano'
+  gem 'capistrano-ext'
+end
+
 group :test, :development do
   gem 'rspec', '>= 2.5'
   gem 'rspec-rails', '>= 2.5'

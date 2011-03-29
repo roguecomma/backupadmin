@@ -1,11 +1,11 @@
 MUST
-* capify
 
 SHOULD
 * server error state
 * state_machine muthafucka!
 * nagios server state check
 * cleaner ssh error handling
+* split each server into its own job so snaps aren't serial
 
 MAYBE
 * remove all fake_snapshot references.  Use mocks.
