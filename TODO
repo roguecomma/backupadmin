@@ -7,7 +7,6 @@ SHOULD
 * state_machine muthafucka!
 * nagios server state check
 * cleaner ssh error handling
-* trim all fields entered through admin interface
 
 MAYBE
 * remove all fake_snapshot references.  Use mocks.
