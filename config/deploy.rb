@@ -1,6 +1,7 @@
 set :stages, %w(qa production)
 require 'capistrano/ext/multistage'
 require "whenever/capistrano"
+require "bundler/capistrano"
 
 set :application, "backupadmin"
 set :repository,  "git@github.com:Viximo/backupadmin.git"
@@ -9,6 +10,7 @@ set :scm, :git
 # Or: `accurev`, `bzr`, `cvs`, `darcs`, `git`, `mercurial`, `perforce`, `subversion` or `none`
 
 set :whenever_roles, :cron
+set :bundle_without, [:test, :darwin]
 set(:branch, tag) if exists?(:tag)
 
 # If you are using Passenger mod_rails uncomment this:
