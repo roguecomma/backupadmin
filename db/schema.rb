@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110322190531) do
+ActiveRecord::Schema.define(:version => 20110328151813) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -27,7 +27,7 @@ ActiveRecord::Schema.define(:version => 20110322190531) do
 
   create_table "servers", :force => true do |t|
     t.string  "name",                                                   :null => false
-    t.string  "system_backup_id", :limit => 64,                         :null => false
+    t.string  "system_backup_id"
     t.string  "ssh_user",                       :default => "root",     :null => false
     t.string  "block_device",     :limit => 15, :default => "/dev/sdh", :null => false
     t.string  "mount_point",      :limit => 15, :default => "/vol",     :null => false
@@ -39,6 +39,7 @@ ActiveRecord::Schema.define(:version => 20110322190531) do
     t.integer "monthly",                        :default => 3,          :null => false
     t.integer "quarterly",                      :default => 4,          :null => false
     t.integer "yearly",                         :default => 7,          :null => false
+    t.string  "hostname",                                               :null => false
   end
 
   create_table "snapshot_events", :force => true do |t|

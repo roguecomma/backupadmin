@@ -2,6 +2,16 @@ require 'spec_helper'
 
 describe Server do
 
+  it { should validate_presence_of :hostname }
+  it { should validate_presence_of :name }
+  it { should validate_numericality_of :minute }
+  it { should validate_numericality_of :hourly }
+  it { should validate_numericality_of :daily }
+  it { should validate_numericality_of :weekly }
+  it { should validate_numericality_of :monthly }
+  it { should validate_numericality_of :quarterly }
+  it { should validate_numericality_of :yearly }
+  
   describe '.highest_frequency_bucket' do
     it 'should return nil if no buckets set' do
       server = Server.new
@@ -62,16 +72,25 @@ describe Server do
     server.get_number_allowed('yearly').should be(5)
   end
   
+  describe 'on create' do
+    it 'should set system_backup_id to a unique value' do
+      server = new_server(:name => 'Foo Bar')
+      server.system_backup_id.should == nil
+      server.save!
+      server.system_backup_id.should == "#{server.id}-foo-bar"
+    end
+  end
+  
   describe '#instance' do
-    it 'should be nil if no servers are tagged with the backup id' do
+    it 'should be nil if no servers have the hostname' do
       create_server.instance.should == nil
     end
     
-    it 'should return a single instance tagged with the backup id' do
-      server = create_server
-      3.times { AWS.run_instances 'ami-123', 1, 1 }
+    it 'should return a single instance matching the hostname' do
+      # Mocks simulate a startup time so boot instances in the past so they'll be ready immediately
+      Timecop.freeze(1.hour.ago) { 3.times { AWS.run_instances 'ami-123', 1, 1 } }
       instance = AWS.servers[1]
-      AWS.create_tags instance.id, {'system-backup-id' => server.system_backup_id}
+      server = create_server(:hostname => instance.dns_name)
       
       server.instance.id.should == instance.id
     end
@@ -87,7 +106,7 @@ describe Server do
       good = []
       2.times do
         snap = AWS.snapshots.create(:volume_id => @volume.id)
-        AWS.create_tags(snap.id, 'system-backup-id' => @server.system_backup_id)
+        AWS.create_tags(snap.id, Server::BACKUP_ID_TAG => @server.system_backup_id)
         good << snap
       end
       
@@ -96,7 +115,7 @@ describe Server do
     
     it 'should not include snapshots for other servers' do
       bad = AWS.snapshots.create(:volume_id => @volume.id)
-      AWS.create_tags(bad.id, 'system-backup-id' => 'something else')
+      AWS.create_tags(bad.id, Server::BACKUP_ID_TAG => 'something else')
       
       @server.snapshots.should_not include(bad)
     end
@@ -106,7 +125,7 @@ describe Server do
       [2,1,4,5,0,3].map do |i|
         Timecop.freeze(Time.now - i.hours) do 
           array << AWS.snapshots.create(:volume_id => @volume.id).tap do |snap|
-            AWS.create_tags(snap.id, 'system-backup-id' => @server.system_backup_id)
+            AWS.create_tags(snap.id, Server::BACKUP_ID_TAG => @server.system_backup_id)
           end
         end
       end

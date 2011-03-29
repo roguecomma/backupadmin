@@ -1,6 +1,7 @@
 MUST
 * use hostnames
 * capify
+* add mysql creds to server table
 
 SHOULD
 * server error state
@@ -14,7 +15,6 @@ MAYBE
 * convert factories to FactoryGirl
 * extract Volume as a model?  Server 1->* Volume ->* Snapshot
 * factor out buckets into their own enum-type thing
-* formtastic for forms
 * use JSON for api, not XML
 * factor out snapshotting strategies
 * cleaner hoptoad notification?

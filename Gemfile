@@ -22,4 +22,11 @@ group :test, :development do
   gem 'rspec-rails', '>= 2.5'
   gem 'fakeweb'
   gem 'timecop'
+  gem 'shoulda'
+  gem 'autotest'
+end
+
+# Gems that won't install right on linux.  use: bundle install --without darwin
+group :darwin do
+  gem 'autotest-fsevent'
 end
