@@ -1,70 +1,14 @@
-<%= form_for(@server) do |f| %>
-  <% if @server.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@server.errors.count, "error") %> prohibited this server from being saved:</h2>
-
-      <ul>
-      <% @server.errors.full_messages.each do |msg| %>
-        <li><%= msg %></li>
-      <% end %>
-      </ul>
-    </div>
+<%= semantic_form_for(@server) do |f| %>
+  <% f.inputs do %>
+    <%= f.input :name %>
+    <%= f.input :hostname %>
+    <%= f.input :ssh_user %>
+    <%= f.input :block_device %>
+    <%= f.input :mount_point %>
+    <%= f.input :state, :as => :select, :collection => ['active', 'inactive'], :include_blank => false %>
+    <% [:minute, :hourly, :daily, :weekly, :monthly, :quarterly, :yearly].each do |method|%>
+      <%= f.input method %>
+    <% end %>
   <% end %>
-
-  <div class="field">
-    <%= f.label :name %><br />
-    <%= f.text_field :name %>
-  </div>
-  <div class="field">
-    <%= f.label :hostname %><br />
-    <%= f.text_field :hostname %>
-  </div>
-  <div class="field">
-    <%= f.label :ssh_user %><br />
-    <%= f.text_field :ssh_user %>
-  </div>
-  <div class="field">
-    <%= f.label :block_device %><br />
-    <%= f.text_field :block_device %>
-  </div>
-  <div class="field">
-    <%= f.label :mount_point %><br />
-    <%= f.text_field :mount_point %>
-  </div>
-  <div class="field">
-    <%= f.label :state %><br />
-    <%= f.text_field :state %>
-  </div>
-
-  <div class="field">
-    <%= f.label :minute %><br />
-    <%= f.text_field :minute %>
-  </div>
-  <div class="field">
-    <%= f.label :hourly %><br />
-    <%= f.text_field :hourly %>
-  </div>
-  <div class="field">
-    <%= f.label :daily %><br />
-    <%= f.text_field :daily %>
-  </div>
-  <div class="field">
-    <%= f.label :weekly %><br />
-    <%= f.text_field :weekly %>
-  </div>
-  <div class="field">
-    <%= f.label :monthly %><br />
-    <%= f.text_field :monthly %>
-  </div>
-  <div class="field">
-    <%= f.label :quarterly %><br />
-    <%= f.text_field :quarterly %>
-  </div>
-  <div class="field">
-    <%= f.label :yearly %><br />
-    <%= f.text_field :yearly %>
-  </div>
-  <div class="actions">
-    <%= f.submit %>
-  </div>
+  <%= f.buttons %>
 <% end %>
