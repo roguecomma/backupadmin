@@ -14,3 +14,20 @@ body {
   -moz-border-radius: 24px;
   -webkit-border-radius: 24px;
 }
+
+#flash {
+  p {
+    padding: .5em;
+    text-align: center;
+  }
+  .alert {
+    border: 1px solid #900;
+    color: #900;
+    background: #FCC;
+  }
+  .notice {
+    border: 1px solid #090;
+    color: #090;
+    background: #CFC;
+  }
+}

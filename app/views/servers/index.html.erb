@@ -3,7 +3,7 @@
 <table>
   <tr>
     <th>Name</th>
-    <th>System Backup Id</th>
+    <th>Hostname</th>
     <th>Ssh User</th>
     <th>Block Device</th>
     <th>Mount Point</th>
@@ -17,17 +17,15 @@
 
 <% @servers.each do |server| %>
   <tr>
-    <td><%= server.name %></td>
-    <td><%= server.system_backup_id %></td>
+    <td><%= link_to server.name, server %></td>
+    <td><%= link_to server.hostname, server %></td>
     <td><%= server.ssh_user %></td>
     <td><%= server.block_device %></td>
     <td><%= server.mount_point %></td>
     <td><%= server.state %></td>
-    <td><%= link_to 'Show', server %></td>
     <td><%= link_to 'Edit', edit_server_path(server) %></td>
     <td><%= link_to 'Snapshots', :controller => 'snapshots', :action => 'index', :server_id => server.id %></td>
     <td><%= link_to 'Events', :controller => 'snapshot_events', :action => 'index', :server_id => server.id %></td>
-    <!--td><%= link_to 'Destroy', server, :confirm => 'Are you sure?', :method => :delete %></td-->
   </tr>
 <% end %>
 </table>
