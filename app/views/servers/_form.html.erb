@@ -5,6 +5,8 @@
     <%= f.input :ssh_user %>
     <%= f.input :block_device %>
     <%= f.input :mount_point %>
+    <%= f.input :mysql_user %>
+    <%= f.input :mysql_password %>
     <%= f.input :state, :as => :select, :collection => ['active', 'inactive'], :include_blank => false %>
     <% [:minute, :hourly, :daily, :weekly, :monthly, :quarterly, :yearly].each do |method|%>
       <%= f.input method %>

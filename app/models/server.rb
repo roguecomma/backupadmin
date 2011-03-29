@@ -95,17 +95,6 @@ class Server < ActiveRecord::Base
     self
   end
   
-  #grant reload on *.* to 'badmin'@'%' identified by 'devpassword';
-  def mysql_user
-    # pull from configuration
-    'badmin'
-  end
-
-  def mysql_password
-    # pull from configuration
-    'devpassword'
-  end
-
   private 
     
     def sudo_command(command)

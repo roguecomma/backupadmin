@@ -1,7 +1,6 @@
 MUST
 * use hostnames
 * capify
-* add mysql creds to server table
 
 SHOULD
 * server error state

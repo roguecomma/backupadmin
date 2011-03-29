@@ -8,6 +8,7 @@
     <th>Block Device</th>
     <th>Mount Point</th>
     <th>State</th>
+    <th>MySql User</th>
     <th></th>
     <th></th>
     <th></th>
@@ -23,6 +24,7 @@
     <td><%= server.block_device %></td>
     <td><%= server.mount_point %></td>
     <td><%= server.state %></td>
+    <td><%= server.mysql_user %></td>
     <td><%= link_to 'Edit', edit_server_path(server) %></td>
     <td><%= link_to 'Snapshots', :controller => 'snapshots', :action => 'index', :server_id => server.id %></td>
     <td><%= link_to 'Events', :controller => 'snapshot_events', :action => 'index', :server_id => server.id %></td>
