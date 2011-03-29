@@ -83,7 +83,6 @@ class Snapshot
           'snapshot_id' => id
         })
       end
-      raise
     end
     
     private
