@@ -83,10 +83,10 @@ class Server < ActiveRecord::Base
     !!AWS.snapshots.all('volume-id' => volume_id).detect{|s| !s.ready?}
   end
   
-  def service_check
-    # check that system_backup_id can find a server with an public_ip_address
-    # verify that the block point is attached
-    # verify that the volume exists (df -k or something)
+  def service_check!
+    raise "missing instance" unless instance
+    raise "missing volume_id" unless volume_id
+    raise "snapshot already in progress" if snapshot_in_progress?
   end
   
   def reload

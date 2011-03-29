@@ -32,6 +32,16 @@ describe Snapshot do
     end
   end
 
+  describe '.create' do
+    before(:each) do
+      @snapshot = Snapshot.create(@server, @volume.id, 'daily')
+    end
+    
+    it 'should create a snapshot for the volume' do
+      @snapshot.volume_id = @volume.id
+    end
+  end
+  
   describe '#frequency_buckets' do
     before(:each) do
       @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
@@ -70,9 +80,8 @@ describe Snapshot do
     
     it 'should raise exception if add tag raises exception' do
       AWS.stub!(:create_tags).and_raise("hey")
-      HoptoadNotifier.should_receive(:notify)
       
-      @snapshot.add_frequency_bucket('daily')
+      expect { @snapshot.add_frequency_bucket('daily') }.to raise_error("hey")
     end
 
     it 'should add tag to snapshot' do
@@ -91,9 +100,8 @@ describe Snapshot do
     it 'should raise exception if delete tag raises exception' do
       Delayed::Worker.delay_jobs = false
       AWS.stub!(:delete_tags).and_raise("hey")
-      HoptoadNotifier.should_receive(:notify)
       
-      @snapshot.remove_frequency_bucket('daily')
+      expect { @snapshot.remove_frequency_bucket('daily') }.to raise_error("hey")
     end
 
     it 'should remove the frequency tag' do
