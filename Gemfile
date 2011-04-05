@@ -4,9 +4,8 @@ gem 'rails', '3.0.3', :require => %w(action_controller active_record active_supp
 
 gem 'mysql', '~> 2.8.0'
 gem 'delayed_job', '2.1.4.exp1'
-#gem 'fog', '~> 0.5'
-gem 'fog', :path => '../fog'
-#gem 'fog', :git => 'git@github.com:geemus/fog.git'
+gem 'fog', '~> 0.7', '>= 0.7.2'
+# gem 'fog', :path => '../fog'
 gem 'flutie' # Default styling
 gem 'haml' # SCSS support
 gem 'formtastic'
