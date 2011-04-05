@@ -22,7 +22,7 @@ qa:
   encoding: utf8
   reconnect: true
   timeout: 60
-  database: backup_admin_qa
+  database: backupadmin_qa
   host: localhost
   username: root
   password:
@@ -32,7 +32,7 @@ production:
   encoding: utf8
   reconnect: true
   timeout: 60
-  database: backup_admin_production
+  database: backupadmin_production
   host: localhost
   username: root
   password:
