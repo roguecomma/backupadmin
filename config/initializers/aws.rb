@@ -1,4 +1,4 @@
-::AppConfig.ec2 = YAML::load(IO.read("config/amazon_ec2.yml"))[Rails.env.to_s]
+::AppConfig.ec2 = YAML::load(IO.read(File.expand_path('../../config/amazon_ec2.yml', __FILE__)))[Rails.env.to_s]
 
 AWS = Fog::Compute.new(
   :provider => 'AWS',
