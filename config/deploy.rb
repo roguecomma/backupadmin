@@ -1,21 +1,42 @@
 set :stages, %w(qa production)
 require 'capistrano/ext/multistage'
-require "whenever/capistrano"
 require "bundler/capistrano"
+require "whenever/capistrano"
 
 set :application, "backupadmin"
 set :repository,  "git@github.com:Viximo/backupadmin.git"
+set :user, 'ubuntu'
+set :deploy_to, "/var/www/#{application}"
+set :deploy_via, :remote_cache
+set :rails_env, lambda { stage.to_s }
 
 set :scm, :git
 # Or: `accurev`, `bzr`, `cvs`, `darcs`, `git`, `mercurial`, `perforce`, `subversion` or `none`
 
 set :whenever_roles, :cron
+set :whenever_command, lambda { "bundle exec whenever" }
+set :whenever_environment, lambda { rails_env }
+
 set :bundle_without, [:test, :darwin]
 set(:branch, tag) if exists?(:tag)
 
-# If you are using Passenger mod_rails uncomment this:
-# if you're still using the script/reapear helper you will need
-# these http://github.com/rails/irs_process_scripts
+set :default_environment, lambda {{'RAILS_ENV' => rails_env}}
+
+after 'deploy:finalize_update', 'db:symlink', 'amazon:symlink'
+after 'deploy:update_code', 'deploy:migrate'
+
+namespace :amazon do
+  task :symlink do
+    run "ln -s #{shared_path}/amazon.yml #{release_path}/config/amazon_ec2.yml"
+  end
+end
+
+namespace :db do
+  task :symlink do
+    run "rm #{release_path}/config/database.yml"
+    run "ln -s #{shared_path}/database.yml #{release_path}/config/database.yml"
+  end
+end
 
 namespace :deploy do
   task :start do ; end

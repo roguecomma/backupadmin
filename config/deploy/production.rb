@@ -1,5 +1,2 @@
-role :web, "your web-server here"                          # Your HTTP server, Apache/etc
-role :app, "your app-server here"                          # This may be the same as your `Web` server
-role :db,  "your primary db-server here", :primary => true # This is where Rails migrations will run
-role :queue, 'a dj server'
-role :cron, 'repeat one of the queue servers here'
+server 'ec2-50-16-65-96.compute-1.amazonaws.com', :web, :app, :db, :queue, :cron, :primary => true
+set :branch, 'master'

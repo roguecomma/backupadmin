@@ -1,2 +1,12 @@
-Use this README file to introduce your application and point to useful places in the API for learning more.
-Run "rake doc:app" to generate API documentation for your models, controllers, helpers, and libraries.
+== Creating a privilege limited EC2 user:
+
+# Creates a new user with a keypair. Adds these values to config/amazon_ec2.yml.
+iam-usercreate -u backupadmin -k
+
+# Restrict privileges to just what is needed to run the app
+iam-useraddpolicy -u backupadmin -p manage_backups -e Allow \
+-a "ec2:DescribeInstances" \
+-a "ec2:CreateTags" -a "ec2:DeleteTags" \
+-a "ec2:CreateSnapshot" -a "ec2:DeleteSnapshot" -a "ec2:DescribeSnapshots" \
+-a "ec2:DescribeVolumes"  \
+-r "*" -o
