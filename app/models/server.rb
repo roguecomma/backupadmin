@@ -48,7 +48,8 @@ class Server < ActiveRecord::Base
   
   def ssh_exec(command, exception_string = nil)
     command = sudo_command(command) if sudo?
-    Net::SSH.start(ip, ssh_user) do |ssh|
+    options = ssh_key ? {:key_data => [ssh_key], :keys_only => true} : {}
+    Net::SSH.start(ip, ssh_user, options) do |ssh|
       ssh_output = ssh.exec!(command)
       raise "#{exception_string}: #{command} - #{ssh_output}" if ssh_output && exception_string
     end
