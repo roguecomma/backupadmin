@@ -25,6 +25,11 @@ set :default_environment, lambda {{'RAILS_ENV' => rails_env}}
 after 'deploy:finalize_update', 'db:symlink', 'amazon:symlink'
 after 'deploy:update_code', 'deploy:migrate'
 
+after 'deploy:start', 'services:start'
+after 'deploy:stop', 'services:stop'
+before 'deploy:restart', 'services:stop'
+after 'deploy:restart', 'services:start'
+
 namespace :amazon do
   task :symlink do
     run "ln -s #{shared_path}/amazon.yml #{release_path}/config/amazon_ec2.yml"
@@ -43,5 +48,15 @@ namespace :deploy do
   task :stop do ; end
   task :restart, :roles => :app, :except => { :no_release => true } do
     run "#{try_sudo} touch #{File.join(current_path,'tmp','restart.txt')}"
+  end
+end
+
+namespace :services do
+  task :start do
+    sudo "monit start #{application}"
+  end
+  
+  task :stop do
+    sudo "monit stop #{application}"
   end
 end
