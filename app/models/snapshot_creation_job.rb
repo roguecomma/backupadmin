@@ -8,8 +8,8 @@ class SnapshotCreationJob < Struct.new(:frequency_bucket, :queued_time)
   def perform
     if job_too_old_to_run(frequency_bucket, queued_time)
       CustomNotifier.notify(
-        {:exception_class => 'DJ Slow', 
-          :exception_message => "SnapshotCreationJob is too old, skipping bucket #{frequency_bucket}"},
+        {:error_class => 'DJ Slow', 
+          :error_message => "SnapshotCreationJob is too old, skipping bucket #{frequency_bucket}"},
         { 'queued_time' => queued_time, 'now' => Time.now, 'bucket' => frequency_bucket })
     else
       Server.active.each { |server| run(server) }
