@@ -6,6 +6,7 @@ class Server < ActiveRecord::Base
   # Keep these in order from highest to lowest frequency
   FREQUENCY_BUCKETS = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly']
 
+  attr_accessor :tmp_ssh_key
   validates_presence_of :name, :hostname
   validates_numericality_of :minute, :hourly, :daily, :weekly, :monthly, :quarterly, :yearly, 
                             :allows_nil => false, :greater_than_or_equal_to => 0
@@ -13,6 +14,7 @@ class Server < ActiveRecord::Base
   scope :active, where(:state => 'active')
   
   after_create :set_system_backup_id
+  before_validation :update_ssh_key
   
   def self.get_interval_in_seconds(frequency_bucket)
     return case frequency_bucket
@@ -116,5 +118,9 @@ class Server < ActiveRecord::Base
     
     def set_system_backup_id
       self.update_attribute(:system_backup_id, "#{id}-#{name.underscore.gsub(/[_ ]/, '-')}")
+    end
+
+    def update_ssh_key
+      self.ssh_key=tmp_ssh_key if tmp_ssh_key && tmp_ssh_key.length > 0
     end
 end
