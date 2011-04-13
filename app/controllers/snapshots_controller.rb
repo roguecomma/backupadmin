@@ -4,4 +4,8 @@ class SnapshotsController < ApplicationController
   actions :index
   
   respond_to :html, :xml
+
+  def collection
+    @snapshots ||= parent.snapshots
+  end
 end
