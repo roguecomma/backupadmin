@@ -67,7 +67,7 @@ class Server < ActiveRecord::Base
   end
   
   def ip
-    instance.public_ip_address
+    instance.dns_name
   end
   
   def snapshots
