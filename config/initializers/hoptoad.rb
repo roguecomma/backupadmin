@@ -1,5 +1,7 @@
 HoptoadNotifier.configure do |config|
   config.api_key = 'YOURKEYHERE'
+  config.params_filters << "ssh_key"
+  config.params_filters << "mysql_password"
 end
 
 module CustomNotifier
