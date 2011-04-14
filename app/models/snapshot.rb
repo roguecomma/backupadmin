@@ -73,7 +73,7 @@ class Snapshot
       yield.tap do
         SnapshotEvent.log(server, action, message)
       end
-    rescue RuntimeError => e
+    rescue => e
       swallow_errors do
         SnapshotEvent.log(server, action, "FAILED: #{message}")
         CustomNotifier.notify(e, {
