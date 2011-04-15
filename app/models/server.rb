@@ -51,10 +51,14 @@ class Server < ActiveRecord::Base
   def ssh_exec(command, exception_string = nil)
     command = sudo_command(command) if sudo?
     options = ssh_key ? {:key_data => [ssh_key], :keys_only => true} : {}
+    exit_status = 999999
     Net::SSH.start(ip, ssh_user, options) do |ssh|
-      ssh_output = ssh.exec!(command)
-      raise "#{exception_string}: #{command} - #{ssh_output}" if ssh_output && exception_string
+      ssh.open_channel do |chan|
+        chan.on_request('exit-status') { |ch, data| exit_status = data.read_long }
+        chan.exec(command)
+      end
     end
+    raise "#{exception_string}: #{command} - bad exit status: #{exit_status}" if exit_status != 0 && exception_string
   end
   
   def instance
@@ -101,7 +105,7 @@ class Server < ActiveRecord::Base
   private 
     
     def sudo_command(command)
-      "sudo env PATH=$PATH #{command}"
+      "sudo #{command}"
     end
     
     def sudo?
