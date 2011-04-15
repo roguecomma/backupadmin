@@ -35,6 +35,7 @@ GEM
       ZenTest (>= 4.4.1)
     autotest-fsevent (0.2.5)
       sys-uname
+    bcrypt-ruby (2.1.4)
     builder (2.1.2)
     capistrano (2.5.19)
       highline
@@ -48,6 +49,10 @@ GEM
     delayed_job (2.1.4.exp1)
       activesupport (~> 3.0)
       daemons
+    devise (1.2.1)
+      bcrypt-ruby (~> 2.1.2)
+      orm_adapter (~> 0.0.3)
+      warden (~> 1.0.3)
     diff-lcs (1.1.2)
     erubis (2.6.6)
       abstract (>= 1.0.0)
@@ -95,6 +100,7 @@ GEM
       net-ssh (>= 1.99.1)
     newrelic_rpm (2.13.4)
     nokogiri (1.4.4)
+    orm_adapter (0.0.4)
     polyglot (0.3.1)
     rack (1.2.1)
     rack-mount (0.6.13)
@@ -137,6 +143,8 @@ GEM
     treetop (1.4.9)
       polyglot (>= 0.3.1)
     tzinfo (0.3.23)
+    warden (1.0.3)
+      rack (>= 1.0.0)
     whenever (0.6.7)
       aaronh-chronic (>= 0.3.9)
       activesupport (>= 2.3.4)
@@ -150,6 +158,7 @@ DEPENDENCIES
   capistrano
   capistrano-ext
   delayed_job (= 2.1.4.exp1)
+  devise
   fakeweb
   flutie
   fog (~> 0.7, >= 0.7.2)

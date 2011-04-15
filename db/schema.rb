@@ -10,7 +10,14 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110411181615) do
+ActiveRecord::Schema.define(:version => 20110414193205) do
+
+  create_table "admins", :force => true do |t|
+    t.string   "email",                             :default => "", :null => false
+    t.string   "encrypted_password", :limit => 128, :default => "", :null => false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -51,5 +58,22 @@ ActiveRecord::Schema.define(:version => 20110411181615) do
     t.datetime "created_at",               :null => false
     t.text     "log",                      :null => false
   end
+
+  create_table "users", :force => true do |t|
+    t.string   "name",                                               :null => false
+    t.string   "email",                              :default => "", :null => false
+    t.string   "encrypted_password",  :limit => 128, :default => "", :null => false
+    t.datetime "remember_created_at"
+    t.integer  "sign_in_count",                      :default => 0
+    t.datetime "current_sign_in_at"
+    t.datetime "last_sign_in_at"
+    t.string   "current_sign_in_ip"
+    t.string   "last_sign_in_ip"
+    t.string   "password_salt"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "users", ["email"], :name => "index_users_on_email", :unique => true
 
 end

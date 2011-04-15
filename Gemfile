@@ -13,6 +13,8 @@ gem 'inherited_resources'
 gem 'has_scope'
 gem 'whenever'
 
+gem 'devise'
+
 gem 'hoptoad_notifier'
 gem 'newrelic_rpm'
 

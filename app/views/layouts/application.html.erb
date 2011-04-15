@@ -17,6 +17,9 @@
     <p class="notice"><%=h flash[:notice]%></p>
   <% end %>
   </div>
+  <ul class="hmenu">
+    <%= render 'devise/menu/login_items' %>
+  </ul>
   <%= yield %>
 </div>
 
