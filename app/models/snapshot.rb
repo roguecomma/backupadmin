@@ -107,11 +107,13 @@ class Snapshot
   def add_frequency_bucket(frequency_bucket)
     delay.add_bucket_tag(frequency_bucket)
     frequency_buckets << frequency_bucket unless frequency_bucket.include?(frequency_bucket)
+    SnapshotEvent.log(server, 'update bucket', "Tagging #{server.id} with bucket -> #{frequency_bucket}")
   end
 
   def remove_frequency_bucket(frequency_bucket)
     delay.remove_bucket_tag(frequency_bucket)
     frequency_buckets.delete(frequency_bucket) if frequency_bucket.include?(frequency_bucket)
+    SnapshotEvent.log(server, 'remove bucket', "Removing bucket #{frequency_bucket} from #{server.id}" )
   end
   
   def frequency_buckets
