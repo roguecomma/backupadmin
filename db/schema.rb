@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110414193205) do
+ActiveRecord::Schema.define(:version => 20110415205358) do
 
   create_table "admins", :force => true do |t|
     t.string   "email",                             :default => "", :null => false
@@ -35,7 +35,7 @@ ActiveRecord::Schema.define(:version => 20110414193205) do
   create_table "servers", :force => true do |t|
     t.string  "name",                                                     :null => false
     t.string  "system_backup_id"
-    t.string  "ssh_user",                         :default => "root",     :null => false
+    t.string  "ssh_user",                         :default => "dbbackup", :null => false
     t.string  "block_device",     :limit => 15,   :default => "/dev/sdh", :null => false
     t.string  "mount_point",      :limit => 15,   :default => "/vol",     :null => false
     t.string  "state",                            :default => "active",   :null => false
