@@ -89,7 +89,7 @@ class Snapshot
     
       def swallow_errors
         yield
-      rescue RuntimeError => e
+      rescue => e
       end    
 
   end
