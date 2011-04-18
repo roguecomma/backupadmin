@@ -28,10 +28,16 @@ class Snapshot
     
     def create(server, volume_id, frequency_bucket)
       AWS.snapshots.create('volume_id' => volume_id).tap do |snapshot|
-        AWS.tags.create({:resource_id => snapshot.id, :key => NAME_TAG, :value => "snap of #{server.name}"})
-        AWS.tags.create({:resource_id => snapshot.id, :key => Server::BACKUP_ID_TAG, :value => server.system_backup_id})
-        AWS.tags.create({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket), :value => nil})
         SnapshotEvent.log(server, 'create snapshot', "Snapshot (#{snapshot.id}) started for bucket -> #{frequency_bucket}.")
+        begin
+          AWS.tags.create({:resource_id => snapshot.id, :key => NAME_TAG, :value => "snap of #{server.name}"})
+          AWS.tags.create({:resource_id => snapshot.id, :key => Server::BACKUP_ID_TAG, :value => server.system_backup_id})
+          AWS.tags.create({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket), :value => nil})
+        rescue => e
+          SnapshotEvent.log(server, 'create snapshot', "Failed: Snapshot (#{snapshot.id}) did not get all initial tags.")
+          raise e
+        end
+          
       end
     end
 
