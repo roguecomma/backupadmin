@@ -76,11 +76,13 @@ class Snapshot
     rescue => e
       swallow_errors do
         SnapshotEvent.log(server, action, "FAILED: #{message}")
+        snap_id = 'no snapshot'
+        swallow_errors { snap_id = id if aws_snapshot }
         CustomNotifier.notify(e, {
           'action' => action,
           'message' => message,
           'server' => server.attributes,            
-          'snapshot_id' => id
+          'snapshot_id' => snap_id
         })
       end
     end
