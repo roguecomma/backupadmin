@@ -63,7 +63,7 @@ class Snapshot
           table_lock = false
         ensure
           swallow_errors { server.ssh_exec("xfs_freeze -u #{server.mount_point}") } if xfs_lock
-          swallow_errors { mysql.query("UNLOCK TABLES") if table_lock } if table_lock
+          swallow_errors { mysql.query("UNLOCK TABLES") } if table_lock
           mysql.close()
         end
       end
