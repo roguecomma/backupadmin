@@ -18,6 +18,6 @@ Server::FREQUENCY_BUCKETS.each do |bucket|
   end
 end
 
-every timing(Server::FREQUENCY_BUCKETS.first) do
+every timing(Server::FREQUENCY_BUCKETS.first), :at => 7 do
   runner "Delayed::Job.enqueue SnapshotRemovalJob.new"
 end
