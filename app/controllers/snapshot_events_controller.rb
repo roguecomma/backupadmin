@@ -3,12 +3,9 @@ class SnapshotEventsController < ApplicationController
   actions :index, :show
   respond_to :html, :xml
   
-  has_scope :for_server_id, :only => :index
+  has_scope :only => :index
   
-  private
-  
-    def collection
-      @snapshot_events = end_of_association_chain.join_server
-    end
-    
+  def index
+    @snapshot_events = SnapshotEvent.for_server_id(params[:server_id]).join_server.paginate(:page => params[:page], :per_page => 100)
+  end
 end

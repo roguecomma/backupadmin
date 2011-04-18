@@ -1,5 +1,6 @@
 <h1>Listing Snapshot Events</h1>
 
+<%= will_paginate @snapshot_events %>
 <table>
   <tr>
     <th width="10%">Server Name</th>
@@ -16,4 +17,5 @@
     <td><%= snapshot_event.log %></td>
   </tr>
 <% end %>
+
 </table>
