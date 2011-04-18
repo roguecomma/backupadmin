@@ -6,7 +6,7 @@ class SnapshotCreationJob < Struct.new(:frequency_bucket, :queued_time)
   end
 
   def perform
-    if job_too_old_to_run(frequency_bucket, queued_time)
+    if self.job_too_old_to_run(frequency_bucket, queued_time)
       CustomNotifier.notify(
         {:error_class => 'DJ Slow', 
           :error_message => "SnapshotCreationJob is too old, skipping bucket #{frequency_bucket}"},
@@ -18,7 +18,7 @@ class SnapshotCreationJob < Struct.new(:frequency_bucket, :queued_time)
 
   def run(server)
     if server.is_highest_frequency_bucket?(frequency_bucket)
-      Snapshot.take_snapshot(server, frequency_bucket)
+      Delayed::Job.enqueue(TakeSnapshotJob.new(frequency_bucket, server.id, queued_time))
     else
       if (snapshot = server.oldest_higher_frequency_snapshot(frequency_bucket))
         snapshot.add_frequency_bucket(frequency_bucket)
@@ -27,7 +27,7 @@ class SnapshotCreationJob < Struct.new(:frequency_bucket, :queued_time)
   end
 
   # returns true if the time is older than one interval
-  def job_too_old_to_run(frequency_bucket, time)
+  def self.job_too_old_to_run(frequency_bucket, time)
     (time + Server.get_interval_in_seconds(frequency_bucket)) < Time.now
   end
 end
