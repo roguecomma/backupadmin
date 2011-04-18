@@ -84,6 +84,12 @@ describe Snapshot do
       expect { @snapshot.add_frequency_bucket('daily') }.to raise_error("hey")
     end
 
+    it 'should not raise exception if add tag raises Fog::Service::NotFound' do
+      AWS.stub!(:create_tags).and_raise(Fog::Service::NotFound.new('failure'))
+      @snapshot.add_frequency_bucket('daily')
+      @snapshot.frequency_buckets.should_not include('daily')
+    end
+
     it 'should add tag to snapshot' do
       @snapshot.add_frequency_bucket('daily')
       @snapshot.frequency_buckets.should include('daily')
@@ -97,8 +103,16 @@ describe Snapshot do
       @snapshot.add_frequency_bucket('daily')
     end
     
+    it 'should log tag removal failure and complete job successfully if snapshot doesnt exist' do
+      Delayed::Worker.delay_jobs = false
+      Snapshot.stub!(:find).and_return(nil)
+      AWS.should_not_receive(:delete_tags)
+      @snapshot.remove_frequency_bucket('daily')
+    end
+
     it 'should raise exception if delete tag raises exception' do
       Delayed::Worker.delay_jobs = false
+      Snapshot.stub!(:find).and_return(@snapshot)
       AWS.stub!(:delete_tags).and_raise("hey")
       
       expect { @snapshot.remove_frequency_bucket('daily') }.to raise_error("hey")
