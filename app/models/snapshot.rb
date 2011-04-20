@@ -29,15 +29,9 @@ class Snapshot
     def create(server, volume_id, frequency_bucket)
       AWS.snapshots.create('volume_id' => volume_id).tap do |snapshot|
         SnapshotEvent.log(server, 'create snapshot', "Snapshot (#{snapshot.id}) started for bucket -> #{frequency_bucket}.")
-        begin
-          AWS.tags.create({:resource_id => snapshot.id, :key => NAME_TAG, :value => "snap of #{server.name}"})
-          AWS.tags.create({:resource_id => snapshot.id, :key => Server::BACKUP_ID_TAG, :value => server.system_backup_id})
-          AWS.tags.create({:resource_id => snapshot.id, :key => self.tag_name(frequency_bucket), :value => nil})
-        rescue => e
-          SnapshotEvent.log(server, 'create snapshot', "Failed: Snapshot (#{snapshot.id}) did not get all initial tags.")
-          raise e
-        end
-          
+        Delayed::Job.enqueue(AddTagJob.new(snapshot.id, server.id, NAME_TAG, "snap of #{server.name}"))
+        Delayed::Job.enqueue(AddTagJob.new(snapshot.id, server.id, Server::BACKUP_ID_TAG, server.system_backup_id))
+        Delayed::Job.enqueue(AddTagJob.new(snapshot.id, server.id, self.tag_name(frequency_bucket)))
       end
     end
 
@@ -113,7 +107,7 @@ class Snapshot
   end
 
   def add_frequency_bucket(frequency_bucket)
-    Delayed::Job.enqueue(AddTagJob.new(id, frequency_bucket, server.id))
+    Delayed::Job.enqueue(AddTagJob.new(id, server.id, Snapshot.tag_name(frequency_bucket)))
     frequency_buckets << frequency_bucket unless frequency_bucket.include?(frequency_bucket)
   end
 

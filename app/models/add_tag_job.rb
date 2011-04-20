@@ -1,19 +1,20 @@
-class AddTagJob < Struct.new(:snapshot_id, :frequency_bucket, :server_id)
+class AddTagJob < Struct.new(:snapshot_id, :server_id, :key, :value)
 
-  def initialize(a_snapshot_id, bucket, a_server_id)
-    self.snapshot_id = a_snapshot_id
-    self.frequency_bucket = bucket
-    self.server_id = a_server_id
+  def initialize(snap_id, serv_id, k, v=nil)
+    self.snapshot_id = snap_id
+    self.server_id = serv_id
+    self.key = k
+    self.value = v
   end
 
   def perform
     server = Server.find(server_id)
     begin
-      AWS.tags.create({:resource_id => snapshot_id, :key => Snapshot.tag_name(frequency_bucket), :value => nil}).tap do
-        SnapshotEvent.log(server, 'add frequency tag', "Snapshot #{snapshot_id} add to bucket -> #{frequency_bucket}.")
+      AWS.tags.create({:resource_id => snapshot_id, :key => key, :value => value}).tap do
+        SnapshotEvent.log(server, 'add tag', "Snapshot (#{snapshot_id}), #{key} => #{value}")
       end
     rescue Fog::Service::NotFound => nf
-      SnapshotEvent.log(server, 'add frequency tag', "Failed: Snapshot #{snapshot_id} no longer exists. bucket=#{frequency_bucket}")
+      SnapshotEvent.log(server, 'add tag', "Failed: Snapshot (#{snapshot_id}) no longer exists. #{key} => #{value}")
     end
   end
 end
