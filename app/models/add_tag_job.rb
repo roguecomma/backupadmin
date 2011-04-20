@@ -9,7 +9,7 @@ class AddTagJob < Struct.new(:snapshot_id, :server_id, :key, :value)
 
   def perform
     # work around yaml deserialization bug
-    value = value == 'value_that_will_never_happen' ? nil : value
+    self.value = value == 'value_that_will_never_happen' ? nil : value
 
     server = Server.find(server_id)
     begin
