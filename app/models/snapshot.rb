@@ -74,6 +74,8 @@ class Snapshot
         SnapshotEvent.log(server, action, message)
       end
     rescue => e
+      # This line will be pulled once we determine the classes for the errors we're looking for
+      Rails.logger.warn("report_action failure, exception is: #{e.class} - #{e.to_s}")
       swallow_errors do
         SnapshotEvent.log(server, action, "FAILED: #{message}")
         snap_id = 'no snapshot'
