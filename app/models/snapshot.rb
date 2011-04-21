@@ -3,8 +3,6 @@ require 'mysql'
 class Snapshot
   NAME_TAG = 'Name'
   FREQUENCY_BUCKET_PREFIX = 'frequency-bucket-'
-  AWS_FAILURE_1 = 'InternalError => Request could not be executed due to an internal service error' 
-  AWS_FAILURE_2 = 'Connection reset by peer'
 
   def initialize(server, aws_snapshot)
     @server = server
@@ -118,9 +116,7 @@ class Snapshot
       end    
 
       def ec2_error?(e)
-        # using messages instead of the error classes
-        #e.is_a? Fog::Service::Error || e.is_a? Excon::Errors::SocketError
-        e.message == AWS_FAILURE_1 || e.message == AWS_FAILURE_2
+        e.is_a?(Fog::Service::Error) || e.is_a?(Excon::Errors::SocketError)
       end
   end
 
