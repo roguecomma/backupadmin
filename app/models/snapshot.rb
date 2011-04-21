@@ -3,6 +3,8 @@ require 'mysql'
 class Snapshot
   NAME_TAG = 'Name'
   FREQUENCY_BUCKET_PREFIX = 'frequency-bucket-'
+  AWS_FAILURE_1 = 'InternalError => Request could not be executed due to an internal service error' 
+  AWS_FAILURE_2 = 'Connection reset by peer'
 
   def initialize(server, aws_snapshot)
     @server = server
@@ -21,6 +23,10 @@ class Snapshot
         new(server, snapshot) if server
       end
     end
+
+    def find_most_recent_snapshot(server)
+      AWS.snapshots.all({'volume-id' => server.volume_id}).sort_by(&:created_at).map{|s| Snapshot.new(self, s)}.last
+    end
   
     def tag_name(frequency_bucket)
       FREQUENCY_BUCKET_PREFIX + frequency_bucket
@@ -29,16 +35,22 @@ class Snapshot
     def create(server, volume_id, frequency_bucket)
       AWS.snapshots.create('volume_id' => volume_id).tap do |snapshot|
         SnapshotEvent.log(server, 'create snapshot', "Snapshot (#{snapshot.id}) started for bucket -> #{frequency_bucket}.")
-        Delayed::Job.enqueue(AddTagJob.new(snapshot.id, server.id, NAME_TAG, "snap of #{server.name}"))
-        Delayed::Job.enqueue(AddTagJob.new(snapshot.id, server.id, Server::BACKUP_ID_TAG, server.system_backup_id))
-        Delayed::Job.enqueue(AddTagJob.new(snapshot.id, server.id, self.tag_name(frequency_bucket)))
+        add_initial_tags(snapshot.id, server, frequency_bucket)
       end
+    end
+
+    def add_initial_tags(snapshot_id, server, frequency_bucket)
+      Delayed::Job.enqueue(AddTagJob.new(snapshot_id, server.id, NAME_TAG, "snap of #{server.name}"))
+      Delayed::Job.enqueue(AddTagJob.new(snapshot_id, server.id, Server::BACKUP_ID_TAG, server.system_backup_id))
+      Delayed::Job.enqueue(AddTagJob.new(snapshot_id, server.id, self.tag_name(frequency_bucket)))
     end
 
     def take_snapshot(server, frequency_bucket)
       report_action(server, 'create snapshot', "Snapshot for bucket -> #{frequency_bucket}") do
         server.service_check!
-        instance = server.instance
+        #instance = server.instance
+
+        return if recent_untagged_snapshot_found_and_processed!(server, frequency_bucket)
         table_lock = false
         xfs_lock = false
         mysql = Mysql.init()
@@ -74,6 +86,7 @@ class Snapshot
         SnapshotEvent.log(server, action, message)
       end
     rescue => e
+      raise e if ec2_error? e
       swallow_errors do
         SnapshotEvent.log(server, action, "FAILED: #{e.class} - #{e.to_s}: #{message}")
         snap_id = 'no snapshot'
@@ -87,6 +100,16 @@ class Snapshot
       end
     end
     
+    def recent_untagged_snapshot_found_and_processed!(server, frequency_bucket)
+      snapshot = find_most_recent_snapshot(server)
+      if snapshot && snapshot.is_recent_and_untagged?
+        add_initial_tags(snapshot.id, server, frequency_bucket)
+        true
+      else
+        false
+      end
+    end
+
     private
     
       def swallow_errors
@@ -94,6 +117,11 @@ class Snapshot
       rescue => e
       end    
 
+      def ec2_error?(e)
+        # using messages instead of the error classes
+        #e.is_a? Fog::Service::Error || e.is_a? Excon::Errors::SocketError
+        e.message == AWS_FAILURE_1 || e.message == AWS_FAILURE_2
+      end
   end
 
   def server 
@@ -123,6 +151,10 @@ class Snapshot
       buckets
     end
   end
+
+  def is_recent_and_untagged?
+    is_recent? && (!aws_snapshot.tags || aws_snapshot.tags[NAME_TAG] == nil)
+  end
   
 private
   
@@ -130,4 +162,8 @@ private
     @aws_snapshot
   end
   
+  # We'll count recent as 5m
+  def is_recent?
+    Time.now.gmtime - aws_snapshot.created_at < 300.seconds
+  end
 end
