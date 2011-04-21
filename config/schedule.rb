@@ -21,3 +21,7 @@ end
 every timing(Server::FREQUENCY_BUCKETS.first), :at => 7 do
   runner "Delayed::Job.enqueue SnapshotRemovalJob.new"
 end
+
+every :daily do
+  runner "SnapshotEvent.clearout_old_events!"
+end

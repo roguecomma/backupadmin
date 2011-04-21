@@ -15,4 +15,9 @@ class SnapshotEvent < ActiveRecord::Base
       event.log = event.log.slice(0, 65534) if event.log.size >= 65535
     end
   end
+
+  def self.clearout_old_events!
+    # While the db may be gmtime and this query isn't, who really cares?
+    delete_all(["#{table_name}.created_at < ?", 7.days.ago])
+  end
 end
