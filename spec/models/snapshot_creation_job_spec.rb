@@ -29,7 +29,7 @@ describe SnapshotCreationJob do
   end
 
   it 'should notify hoptoad dj is slow' do
-    @job.stub!(:job_too_old_to_run).and_return(true)
+    SnapshotCreationJob.stub!(:job_too_old_to_run).and_return(true)
     HoptoadNotifier.should_receive(:notify)
     @job.perform
   end

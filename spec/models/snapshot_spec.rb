@@ -42,6 +42,50 @@ describe Snapshot do
     end
   end
   
+  describe '.report_action' do
+    it "should raise exception for known aws issue 1 #{Snapshot::AWS_FAILURE_1}" do
+      expect { Snapshot.report_action(@server, 'nuttin', 'no message') { raise Snapshot::AWS_FAILURE_1 } }.to raise_error(Snapshot::AWS_FAILURE_1)
+    end
+
+    it "should raise exception for known aws issue 2 #{Snapshot::AWS_FAILURE_1}" do
+      expect { Snapshot.report_action(@server, 'nuttin', 'no message') { raise Snapshot::AWS_FAILURE_2 } }.to raise_error(Snapshot::AWS_FAILURE_2)
+    end
+
+    it "should not raise exception for any non-known exception" do
+      Snapshot.report_action(@server, 'nuttin', 'will be a message') { raise 'this will be swallowed' }
+    end
+  end
+  
+  describe '.recent_untagged_snapshot_found_and_processed' do
+    before(:each) do
+      #@aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
+      #@snapshot = Snapshot.new(@server, @aws_snapshot)
+    end
+
+    it 'should do nothing if most recent snapshot properly tagged' do
+      @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id)
+      @aws_snapshot.tags = {Snapshot::NAME_TAG => 'something'}
+      Snapshot.stub!(:find_most_recent_snapshot).and_return(Snapshot.new(@server, @aws_snapshot))
+      Snapshot.should_not_receive(:add_initial_tags)
+      Snapshot.recent_untagged_snapshot_found_and_processed!(@server, 'minute')
+    end
+
+    it 'should do nothing if most recent snapshot created too old' do
+      Timecop.freeze(10.minutes.ago) { @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id) }
+      @server.stub!(:volume_id).and_return(@aws_snapshot.volume_id)
+      Snapshot.should_receive(:add_initial_tags)
+      Snapshot.recent_untagged_snapshot_found_and_processed!(@server, 'minute')
+    end
+
+    it 'should attempt to tag the most recent improperly tagged snapshot' do
+      @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id)
+      @server.stub!(:volume_id).and_return(@aws_snapshot.volume_id)
+      Snapshot.should_receive(:add_initial_tags)
+      Snapshot.recent_untagged_snapshot_found_and_processed!(@server, 'minute')
+    end
+    
+  end
+  
   describe '#frequency_buckets' do
     before(:each) do
       @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id).reload
