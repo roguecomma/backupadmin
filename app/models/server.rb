@@ -61,6 +61,18 @@ class Server < ActiveRecord::Base
     raise "#{exception_string}: #{command} - bad exit status: #{exit_status}" if exit_status != 0 && exception_string
   end
   
+  def seed
+    if snapshots.empty?
+      snapshot = Snapshot.take_snapshot(self, highest_frequency_bucket)
+      FREQUENCY_BUCKETS.each { |bucket| snapshot.add_frequency_bucket(bucket) unless get_number_allowed(bucket) == 0 || bucket == highest_frequency_bucket }
+    else
+      oldest = snapshots.first
+      FREQUENCY_BUCKETS.each do |bucket|
+        oldest.add_frequency_bucket(bucket) unless get_number_allowed(bucket) == 0 || !snapshots_for_frequency_buckets(bucket).empty?
+      end
+    end
+  end
+
   def instance
     @instance ||= AWS.servers.all(instance_filter).first
   end
