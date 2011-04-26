@@ -23,7 +23,7 @@ class Snapshot
     end
 
     def find_most_recent_snapshot(server)
-      AWS.snapshots.all({'volume-id' => server.volume_id}).sort_by(&:created_at).map{|s| Snapshot.new(self, s)}.last
+      AWS.snapshots.all({'volume-id' => server.volume_id}).sort_by(&:created_at).map{|s| Snapshot.new(server, s)}.last
     end
   
     def tag_name(frequency_bucket)
@@ -44,39 +44,45 @@ class Snapshot
     end
 
     def take_snapshot(server, frequency_bucket)
+      snap = nil
       report_action(server, 'create snapshot', "Snapshot for bucket -> #{frequency_bucket}") do
         server.service_check!
-        #instance = server.instance
-
-        return if recent_untagged_snapshot_found_and_processed!(server, frequency_bucket)
-        table_lock = false
-        xfs_lock = false
-        mysql = Mysql.init()
-      
-        # Port forwarding over ssh won't work unless we put this code in a sep thread
-        #ssh.forward.local(1234, server.ip, 3306)
-        #ssh.loop { true }
-      
-        begin
-          mysql.connect(server.ip, server.mysql_user, server.mysql_password)
-          mysql.query("FLUSH TABLES WITH READ LOCK")
-          table_lock = true
-          server.ssh_exec("xfs_freeze -f #{server.mount_point}")
-          xfs_lock = true
-
-          # here we kick off the actual snapshot
-          create(server, server.volume_id, frequency_bucket)
-
-          server.ssh_exec("xfs_freeze -u #{server.mount_point}")
-          xfs_lock = false
-          mysql.query("UNLOCK TABLES")
-          table_lock = false
-        ensure
-          swallow_errors { server.ssh_exec("xfs_freeze -u #{server.mount_point}") } if xfs_lock
-          swallow_errors { mysql.query("UNLOCK TABLES") } if table_lock
-          mysql.close()
-        end
+        snap = recent_untagged_snapshot_found_and_processed!(server, frequency_bucket)
+        snap = suspend_activity_and_snapshot(server, frequency_bucket) unless snap
       end
+      snap
+    end
+
+    def suspend_activity_and_snapshot(server, frequency_bucket)
+      snap = nil
+      table_lock = false
+      xfs_lock = false
+      mysql = Mysql.init()
+      
+      # Port forwarding over ssh won't work unless we put this code in a sep thread
+      #ssh.forward.local(1234, server.ip, 3306)
+      #ssh.loop { true }
+      
+      begin
+        mysql.connect(server.ip, server.mysql_user, server.mysql_password)
+        mysql.query("FLUSH TABLES WITH READ LOCK")
+        table_lock = true
+        server.ssh_exec("xfs_freeze -f #{server.mount_point}")
+        xfs_lock = true
+
+        # here we kick off the actual snapshot
+        snap = Snapshot.new(server, create(server, server.volume_id, frequency_bucket))
+
+        server.ssh_exec("xfs_freeze -u #{server.mount_point}")
+        xfs_lock = false
+        mysql.query("UNLOCK TABLES")
+        table_lock = false
+      ensure
+        swallow_errors { server.ssh_exec("xfs_freeze -u #{server.mount_point}") } if xfs_lock
+        swallow_errors { mysql.query("UNLOCK TABLES") } if table_lock
+        mysql.close()
+      end
+      snap
     end
 
     def report_action(server, action, message)
@@ -102,9 +108,9 @@ class Snapshot
       snapshot = find_most_recent_snapshot(server)
       if snapshot && snapshot.is_recent_and_untagged?
         add_initial_tags(snapshot.id, server, frequency_bucket)
-        true
+        snapshot
       else
-        false
+        nil
       end
     end
 
@@ -149,7 +155,7 @@ class Snapshot
   end
 
   def is_recent_and_untagged?
-    is_recent? && (!aws_snapshot.tags || aws_snapshot.tags[NAME_TAG] == nil)
+    is_recent? && (!aws_snapshot.tags || aws_snapshot.tags[Server::BACKUP_ID_TAG] == nil)
   end
   
 private

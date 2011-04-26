@@ -206,6 +206,49 @@ describe Server do
     end
   end
   
+  describe '#seed' do
+    before(:each) do
+      @server = create_server
+      @server.minute = 0
+      @server.hourly = 0
+      @server.daily = 1
+      @server.weekly = 1
+      @server.monthly = 0
+      @server.quarterly = 1
+      @server.yearly = 0
+      @volume = AWS.volumes.create(:availability_zone => 'us-east-1d', :size => '100G').reload      
+      Delayed::Worker.delay_jobs = false 
+    end
+
+    it 'should create a new snapshot and a tag for each bucket' do
+      @snapshot = Snapshot.new(@server, nil)
+      Snapshot.should_receive(:take_snapshot).and_return(@snapshot)
+      #@snapshot.should_receive(:add_frequency_bucket).with('daily') .. first tag done by take_snapshot
+      @snapshot.should_receive(:add_frequency_bucket).with('weekly')
+      @snapshot.should_receive(:add_frequency_bucket).with('quarterly')
+      @server.seed
+    end
+
+    it 'should create a tag for each bucket without a tag' do
+      @snapshot = Snapshot.new(@server, AWS.snapshots.create(:volume_id => @volume.id).reload)
+      @snapshot.add_frequency_bucket 'weekly'
+      @server.stub!(:snapshots).and_return([@snapshot])
+      @snapshot.should_receive(:add_frequency_bucket).with('daily')
+      @snapshot.should_receive(:add_frequency_bucket).with('quarterly')
+      @server.seed
+    end
+
+    it 'should do nothing' do
+      @snapshot = Snapshot.new(@server, AWS.snapshots.create(:volume_id => @volume.id).reload)
+      @snapshot.add_frequency_bucket 'daily'
+      @snapshot.add_frequency_bucket 'weekly'
+      @snapshot.add_frequency_bucket 'quarterly'
+      @server.stub!(:snapshots).and_return([@snapshot])
+      @snapshot.should_not_receive(:add_frequency_bucket)
+      @server.seed
+    end
+  end
+
   # describe 'with a set of snapshots' do
   #   before(:each) do
   #     @snapshot_h1 = AWS.snapshots.create(:volume_id => @volume.id).tap do |snap|

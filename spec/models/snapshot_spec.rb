@@ -59,7 +59,7 @@ describe Snapshot do
   describe '.recent_untagged_snapshot_found_and_processed' do
     it 'should do nothing if most recent snapshot properly tagged' do
       @aws_snapshot = AWS.snapshots.create(:volume_id => @volume.id)
-      @aws_snapshot.tags = {Snapshot::NAME_TAG => 'something'}
+      @aws_snapshot.tags = {Server::BACKUP_ID_TAG => 'something'}
       Snapshot.stub!(:find_most_recent_snapshot).and_return(Snapshot.new(@server, @aws_snapshot))
       Snapshot.should_not_receive(:add_initial_tags)
       Snapshot.recent_untagged_snapshot_found_and_processed!(@server, 'minute')
@@ -107,6 +107,10 @@ describe Snapshot do
         
       snap = Snapshot.new(@server, aws)
       snap.frequency_buckets.should == ["monthly", "daily"]
+    end
+
+    it 'should return empty array if no tags' do
+      @snapshot.frequency_buckets.should == []
     end
   end
   
