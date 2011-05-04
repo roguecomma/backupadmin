@@ -53,7 +53,7 @@ end
 
 namespace :services do
   task :restart do
-    sudo "monit restart -g {application}"
+    sudo "monit restart -g #{application}"
   end
   
   task :start do
