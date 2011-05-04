@@ -45,10 +45,16 @@ class Snapshot
 
     def take_snapshot(server, frequency_bucket)
       snap = nil
-      report_action(server, 'create snapshot', "Snapshot for bucket -> #{frequency_bucket}") do
-        server.service_check!
-        snap = recent_untagged_snapshot_found_and_processed!(server, frequency_bucket)
-        snap = suspend_activity_and_snapshot(server, frequency_bucket) unless snap
+      job_locked = false
+      begin
+        report_action(server, 'create snapshot', "Snapshot for bucket -> #{frequency_bucket}") do
+          job_locked = server.record_snapshot_starting!
+          server.service_check!
+          snap = recent_untagged_snapshot_found_and_processed!(server, frequency_bucket)
+          snap = suspend_activity_and_snapshot(server, frequency_bucket) unless snap
+        end
+      ensure
+        server.record_snapshot_stopping! if job_locked == true
       end
       snap
     end
