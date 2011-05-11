@@ -1,6 +1,7 @@
 require 'net/ssh'
 
 class Server < ActiveRecord::Base
+  IN_PROGRESS_ERROR = 'snapshot DJ job already in progress, not starting'
   BACKUP_ID_TAG = 'system-backup-id'
   
   # Keep these in order from highest to lowest frequency
@@ -114,6 +115,17 @@ class Server < ActiveRecord::Base
     self
   end
   
+  def record_snapshot_starting!
+    affected_rows = self.class.update_all(["snapshot_job_started = now()"], ["id=? and snapshot_job_started is null", id])
+    raise IN_PROGRESS_ERROR if affected_rows == 0
+    true
+  end
+
+  def record_snapshot_stopping!
+    self.snapshot_job_started = nil
+    save!
+  end
+
   private 
     
     def sudo_command(command)
