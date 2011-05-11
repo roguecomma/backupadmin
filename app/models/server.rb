@@ -115,15 +115,14 @@ class Server < ActiveRecord::Base
     self
   end
   
-  def record_snapshot_starting!
-    affected_rows = self.class.update_all(["snapshot_job_started = now()"], ["id=? and snapshot_job_started is null", id])
+  def self.record_snapshot_starting(server)
+    affected_rows = update_all(["snapshot_job_started = now()"], ["id=? and snapshot_job_started is null", server.id])
     raise IN_PROGRESS_ERROR if affected_rows == 0
     true
   end
 
-  def record_snapshot_stopping!
-    self.snapshot_job_started = nil
-    save!
+  def self.record_snapshot_stopping(server)
+    update_all(["snapshot_job_started = null"], ["id=?", server.id])
   end
 
   private 
