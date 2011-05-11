@@ -99,8 +99,8 @@ describe Server do
   describe 'snapshot_job_started field' do
     it 'should raise exception if job already running' do
       @server = create_server
-      @server.record_snapshot_starting!
-      expect { @server.record_snapshot_starting! }.to raise_error(Server::IN_PROGRESS_ERROR)
+      Server.record_snapshot_starting(@server)
+      expect { Server.record_snapshot_starting(@server) }.to raise_error(Server::IN_PROGRESS_ERROR)
     end
   end
 

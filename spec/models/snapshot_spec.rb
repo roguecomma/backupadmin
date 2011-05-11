@@ -58,15 +58,15 @@ describe Snapshot do
   
   describe '.take_snapshot' do
     it 'should raise exception if snapshot job already running' do
-      @server.record_snapshot_starting!
+      Server.record_snapshot_starting(@server)
       HoptoadNotifier.should_receive(:notify)
-      @server.should_not_receive(:record_snapshot_stopping!)
+      Server.should_not_receive(:record_snapshot_stopping)
       Snapshot.take_snapshot(@server, 'minute')
     end
 
     it 'should unlock snapshot job lock since we created the lock' do
       @server.stub!(:service_check!).and_return( lambda { raise 'nuttin' } )
-      @server.should_receive(:record_snapshot_stopping!)
+      Server.should_receive(:record_snapshot_stopping)
       Snapshot.take_snapshot(@server, 'minute')
     end
   end
