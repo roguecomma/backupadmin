@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110504133339) do
+ActiveRecord::Schema.define(:version => 20110818142758) do
 
   create_table "admins", :force => true do |t|
     t.string   "email",                             :default => "", :null => false
@@ -51,6 +51,7 @@ ActiveRecord::Schema.define(:version => 20110504133339) do
     t.string   "mysql_password"
     t.string   "ssh_key",              :limit => 4000
     t.datetime "snapshot_job_started"
+    t.string   "snapshot_type"
   end
 
   create_table "snapshot_events", :force => true do |t|
