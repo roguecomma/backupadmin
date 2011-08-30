@@ -7,6 +7,7 @@ class TakeSnapshotJob < Struct.new(:frequency_bucket, :server_id, :queued_time)
   end
 
   def perform
-    Snapshot.take_snapshot(Server.find(server_id), frequency_bucket) unless SnapshotCreationJob.job_too_old_to_run(frequency_bucket, queued_time)
+    server =  Server.find(server_id)
+    server.snapshot_class.take_snapshot(server, frequency_bucket) unless SnapshotCreationJob.job_too_old_to_run(frequency_bucket, queued_time)
   end
 end

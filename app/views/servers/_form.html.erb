@@ -1,12 +1,18 @@
+<%= javascript_include_tag "http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js" %>
+
 <%= semantic_form_for(@server) do |f| %>
   <% f.inputs do %>
     <%= f.input :name %>
     <%= f.input :hostname %>
+    <%= f.input :snapshot_type, :as => :select, :collection => Server::SNAPSHOT_TYPES, :include_blank => false %>
     <%= f.input :ssh_user %>
+    <li class="string optional" id="server_ssh_key_input">
     <%= f.label "Ssh Key" %>
     <%= f.text_area :tmp_ssh_key, :wrap => 'off' %>
+    </li>
     <%= f.input :block_device %>
     <%= f.input :mount_point %>
+
     <%= f.input :mysql_user %>
     <%= f.input :mysql_password %>
     <%= f.input :state, :as => :select, :collection => ['active', 'inactive'], :include_blank => false %>
@@ -16,3 +22,26 @@
   <% end %>
   <%= f.buttons %>
 <% end %>
+
+<script type="text/javascript">
+
+  //simple function that toggles each of the inputs that are only used for the mysql snapshot type
+  function toggleInputs(show){
+    $.each(["server_mysql_user_input",
+      "server_mysql_password_input",
+      "server_ssh_user_input",
+      "server_ssh_key_input",
+      "server_block_device_input",
+      "server_mount_point_input"], function(index,value){
+      $("#" + value).toggle(show);
+    })
+  }
+
+  //On change of the snapshot type, toggle all the mysql specific inputs
+  $("#server_snapshot_type").change(function(event){
+   toggleInputs(null);
+  })
+
+  //depending on the value of snapshot type, toggle all the mysql specific inputs
+  toggleInputs($("#server_snapshot_type").val() == "MysqlSnapshot");
+</script>

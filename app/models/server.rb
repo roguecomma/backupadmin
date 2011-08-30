@@ -7,8 +7,10 @@ class Server < ActiveRecord::Base
   # Keep these in order from highest to lowest frequency
   FREQUENCY_BUCKETS = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly']
 
+  SNAPSHOT_TYPES = ['MysqlSnapshot', 'Snapshot']
+
   attr_accessor :tmp_ssh_key
-  validates_presence_of :name, :hostname
+  validates_presence_of :name, :hostname, :snapshot_type
   validates_numericality_of :minute, :hourly, :daily, :weekly, :monthly, :quarterly, :yearly, 
                             :allows_nil => false, :greater_than_or_equal_to => 0
   
@@ -42,9 +44,13 @@ class Server < ActiveRecord::Base
   end
 
   def higher_frequency_buckets(frequency_bucket)
-    return FREQUENCY_BUCKETS.slice(0, FREQUENCY_BUCKETS.index(frequency_bucket))
+    FREQUENCY_BUCKETS.slice(0, FREQUENCY_BUCKETS.index(frequency_bucket))
   end
-  
+
+  def snapshot_class
+    snapshot_type.constantize
+  end
+
   def get_number_allowed(frequency_bucket)
     respond_to?(frequency_bucket) ? send(frequency_bucket) : 0
   end
@@ -64,7 +70,7 @@ class Server < ActiveRecord::Base
   
   def seed
     if snapshots.empty?
-      snapshot = Snapshot.take_snapshot(self, highest_frequency_bucket)
+      snapshot = snapshot_class.take_snapshot(self, highest_frequency_bucket)
       FREQUENCY_BUCKETS.each { |bucket| snapshot.add_frequency_bucket(bucket) unless get_number_allowed(bucket) == 0 || bucket == highest_frequency_bucket }
     else
       oldest = snapshots.first
@@ -88,7 +94,7 @@ class Server < ActiveRecord::Base
   end
   
   def snapshots
-    @snapshots ||= AWS.snapshots.all(snapshot_filter).sort_by(&:created_at).map{|s| Snapshot.new(self, s)}
+    @snapshots ||= AWS.snapshots.all(snapshot_filter).sort_by(&:created_at).map{|s| snapshot_class.new(self, s)}
   end
   
   def snapshots_for_frequency_buckets(*buckets) 
