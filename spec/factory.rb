@@ -58,6 +58,7 @@ module Factory
       :name => 'test-server',
       :mount_point => '/volfake',
       :block_device => '/dev/sdfake',
+      :snapshot_type => Server::SNAPSHOT_TYPES[0],
       :hostname => "server-#{Factory.counter('server')}.local"
     )
     attributes
