@@ -53,14 +53,14 @@ end
 
 namespace :services do
   task :restart do
-    sudo "monit restart -g #{application}"
+    sudo "monit restart all"
   end
   
   task :start do
-    sudo "monit start -g #{application}"
+    sudo "monit start all"
   end
   
   task :stop do
-    sudo "monit stop -g #{application}"
+    sudo "monit stop all"
   end
 end
