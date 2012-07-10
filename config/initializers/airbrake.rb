@@ -1,7 +1,9 @@
-HoptoadNotifier.configure do |config|
-  config.api_key = 'YOURKEYHERE'
-  config.params_filters << "ssh_key"
-  config.params_filters << "mysql_password"
+if ENV['AIRBRAKE_KEY']
+  Airbrake.configure do |config|
+    config.api_key = ENV['AIRBRAKE_KEY']
+    config.params_filters << "ssh_key"
+    config.params_filters << "mysql_password"
+  end
 end
 
 module CustomNotifier
@@ -15,6 +17,6 @@ module CustomNotifier
         :backtrace => exception.backtrace
       }
     end
-    HoptoadNotifier.notify(options.merge(:parameters => parameters))
+    Airbrake.notify(options.merge(:parameters => parameters))
   end
 end

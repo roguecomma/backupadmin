@@ -16,13 +16,8 @@ gem 'whenever'
 
 gem 'devise'
 
-gem 'hoptoad_notifier'
+gem 'airbrake'
 gem 'newrelic_rpm'
-
-group :deploy do
-  gem 'capistrano'
-  gem 'capistrano-ext'
-end
 
 group :test, :development do
   gem 'rspec', '>= 2.5'

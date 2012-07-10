@@ -14,7 +14,7 @@ common: &default_settings
   # You must specify the license key associated with your New Relic
   # account.  This key binds your Agent's data to your account in the
   # New Relic RPM service.
-  license_key: 'YOURKEYHERE'
+  license_key: <%= ENV['NEWRELIC_KEY'] %>
   
   # Agent Enabled (Rails Only)
   # Use this setting to force the agent to run or not run.
@@ -33,13 +33,13 @@ common: &default_settings
   # "All UI" then specify a semicolon separated list of up to three
   # distinct names.  If you comment this out, it defaults to the 
   # capitalized RAILS_ENV (i.e., Production, Staging, etc)
-  app_name: 'Viximo Backup Administration'
+  app_name: 'Backup Administration'
 
   # When "true", the agent collects performance data about your 
   # application and reports this data to the NewRelic RPM service at 
   # newrelic.com. This global switch is normally overridden for each 
   # environment below. (formerly called 'enabled')
-  monitor_mode: true
+  monitor_mode: <% ENV['NEWRELIC_KEY'] ? 'true' : 'false' %>
 
   # Developer mode should be off in every environment but
   # development as it has very high overhead in memory.
@@ -220,12 +220,3 @@ test:
 # incurring any user-visible performance degradation.
 production:
   <<: *default_settings
-  
-# Many applications have a staging environment which behaves
-# identically to production.  Support for that environment is provided
-# here.  By default, the staging environment has the agent turned on.
-qa:
-  <<: *default_settings
-  #license_key: 'YOURKEYHERE'
-  monitor_mode: true
-  #app_name: Viximo Backup Administration (QA)

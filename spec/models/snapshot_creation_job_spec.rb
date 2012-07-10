@@ -28,9 +28,9 @@ describe SnapshotCreationJob do
     @job.run(@server)
   end
 
-  it 'should notify hoptoad dj is slow' do
+  it 'should notify Airbrake dj is slow' do
     SnapshotCreationJob.stub!(:job_too_old_to_run).and_return(true)
-    HoptoadNotifier.should_receive(:notify)
+    Airbrake.should_receive(:notify)
     @job.perform
   end
 
