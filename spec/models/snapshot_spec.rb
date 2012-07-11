@@ -59,7 +59,7 @@ describe Snapshot do
   describe '.take_snapshot' do
     it 'should raise exception if snapshot job already running' do
       Server.record_snapshot_starting(@server)
-      AirbrakeNotifier.should_receive(:notify)
+      Airbrake.should_receive(:notify)
       Server.should_not_receive(:record_snapshot_stopping)
       Snapshot.take_snapshot(@server, 'minute')
     end
@@ -195,7 +195,7 @@ describe Snapshot do
     
     it 'should raise exception if remove snapshot raises exception' do
       @aws_snapshot.stub!(:destroy).and_raise("NO!")
-      AirbrakeNotifier.should_receive(:notify)
+      Airbrake.should_receive(:notify)
       @snapshot.destroy
     end
   end

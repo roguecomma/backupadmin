@@ -1,8 +1,14 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 ENV["RAILS_ENV"] ||= 'test'
+
+# Required environment configuration
+%w(SECRET_TOKEN AWS_ACCESS_KEY AWS_SECRET_ACCESS_KEY).each do |k|
+  ENV[k] = k.downcase.tr('_','-')
+end
+
 require File.expand_path("../../config/environment", __FILE__)
 require 'rspec/rails'
-require 'spec/factory'
+require 'factory'
 require 'fakeweb'
 require 'timecop'
 
