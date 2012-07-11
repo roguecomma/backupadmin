@@ -5,9 +5,9 @@ Backup Admin
 Components
 ----------
 
-Rails app - Web interface to configure backups
-Delayed Job queue - Backup jobs are performed asynchronously from a queue. At least one queue process will need to be run (`rake jobs:work`)
-Cron - A schedule.rb file is provided to define tasks that need to run periodically. Use the whenever gem to export this to a cron file on a server when you deploy. See https://github.com/javan/whenever
+* Rails app - Web interface to configure backups
+* Delayed Job queue - Backup jobs are performed asynchronously from a queue. At least one queue process will need to be run (`rake jobs:work`)
+* Cron - A schedule.rb file is provided to define tasks that need to run periodically. Use the whenever gem to export this to a cron file on a server when you deploy. See https://github.com/javan/whenever
 
 
 Configuration
