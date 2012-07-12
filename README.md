@@ -28,3 +28,8 @@ Enabled when NEWRELIC_KEY is set.
 **Airbrake**
 
 Enabled when AIRBRAKE_KEY is set. It his highly recommended that this is enabled as Backup Admin will report execution failures via Airbrake.
+
+License
+-------
+
+Copyright 2012, Viximo Inc. Distributable under the terms of the MIT license. See LICENSE.
